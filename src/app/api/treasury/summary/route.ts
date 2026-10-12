@@ -99,7 +99,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // Group by member and sum
   const memberTotals = new Map<string, { display_name: string; rank: string; total: number }>();
   for (const row of topRaw ?? []) {
-    const m = row.members as { display_name: string; rank: string };
+    const rawMember = Array.isArray(row.members) ? row.members[0] : row.members;
+    const m = rawMember as unknown as { display_name: string; rank: string } | undefined;
+    if (!m) continue;
     const prev = memberTotals.get(row.member_id) ?? { display_name: m.display_name, rank: m.rank, total: 0 };
     prev.total += Number(row.amount);
     memberTotals.set(row.member_id, prev);

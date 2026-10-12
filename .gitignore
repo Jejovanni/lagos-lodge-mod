@@ -1,0 +1,38 @@
+# .gitignore for Lagos Life Secret Lodge Mod
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.production
+.env.development
+
+# Node
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+
+# Netlify
+.netlify/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+
+# Testing
+coverage/

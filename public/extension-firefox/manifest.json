@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Lagos Life — Secret Lodge Mod (Firefox Edition)",
+  "version": "1.0.0",
+  "description": "A secret society mod for Lagos Life. Requires a valid Lodge license.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://lagoslife.app/*",
+    "https://your-netlify-app.netlify.app/*"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "secret-lodge-mod@lagoslife.local",
+      "strict_min_version": "109.0"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://lagoslife.app/*"],
+      "js": ["../injector/loader.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Secret Lodge Mod"
+  }
+}

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lagos Life Mod Simulator</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
@@ -17,18 +18,19 @@
       align-items: center;
       justify-content: center;
       text-align: center;
+      padding: 16px;
     }
     .game-card {
       background: #1b2430;
       border: 1px solid #2d3b4e;
       border-radius: 16px;
       padding: 32px 24px;
-      max-width: 380px;
-      width: 90%;
+      max-width: 400px;
+      width: 100%;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     h1 { font-size: 24px; margin-bottom: 8px; color: #64b5f6; }
-    p { font-size: 14px; color: #90a4ae; line-height: 1.5; margin-bottom: 24px; }
+    p { font-size: 14px; color: #90a4ae; line-height: 1.5; margin-bottom: 20px; }
     .status-badge {
       display: inline-block;
       padding: 6px 12px;
@@ -46,7 +48,6 @@
     label { font-size: 12px; color: #cfd8dc; display: block; margin-bottom: 6px; }
     input {
       width: 100%;
-      box-sizing: border-box;
       padding: 10px 12px;
       background: #0e141b;
       border: 1px solid #37474f;
@@ -58,7 +59,7 @@
     }
     button.btn {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       background: #1e88e5;
       border: none;
       border-radius: 8px;
@@ -66,12 +67,23 @@
       font-weight: bold;
       font-size: 14px;
       cursor: pointer;
+      transition: background 0.2s;
     }
     button.btn:active { background: #1565c0; }
     .hint {
-      font-size: 11px;
-      color: #78909c;
-      margin-top: 14px;
+      font-size: 12px;
+      color: #ffd54f;
+      margin-top: 18px;
+      background: rgba(255, 213, 79, 0.1);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px dashed rgba(255, 213, 79, 0.3);
+    }
+    .alert-msg {
+      font-size: 12px;
+      margin-top: 8px;
+      color: #81c784;
+      display: none;
     }
   </style>
 </head>
@@ -83,33 +95,40 @@
     <p>This sandbox page simulates the Lagos Life web environment to test the Secret Society mod injector locally.</p>
 
     <div class="key-box">
-      <label for="keyInput">Set Mod License Key in localStorage:</label>
+      <label for="keyInput">Mod License Key:</label>
       <input type="text" id="keyInput" placeholder="LODGE-XXXX-XXXX-XXXX-XXXX" value="TEST-DEV-KEY-1234">
-      <button class="btn" onclick="saveAndReload()">Activate & Run Injector</button>
+      <button class="btn" id="activateBtn">Activate & Run Injector</button>
+      <div id="alertMsg" class="alert-msg">✓ Activated! Mod injected below.</div>
     </div>
 
     <div class="hint">
-      Look at the bottom right corner of your screen for the gold compass-and-square emblem!
+      👉 Look at the <strong>bottom-right corner</strong> for the gold Masonic emblem! Click it to open the drawer.
     </div>
   </div>
 
   <script>
-    // Prefill from localStorage if exists
-    const existing = localStorage.getItem('lodge_license_key');
-    if (existing) {
-      document.getElementById('keyInput').value = existing;
+    const input = document.getElementById('keyInput');
+    const btn = document.getElementById('activateBtn');
+    const alertMsg = document.getElementById('alertMsg');
+
+    // Default key in localStorage if empty
+    if (!localStorage.getItem('lodge_license_key')) {
+      localStorage.setItem('lodge_license_key', 'TEST-DEV-KEY-1234');
+    } else {
+      input.value = localStorage.getItem('lodge_license_key');
     }
 
-    function saveAndReload() {
-      const val = document.getElementById('keyInput').value.trim();
+    btn.addEventListener('click', function() {
+      const val = input.value.trim();
       if (val) {
         localStorage.setItem('lodge_license_key', val);
-        location.reload();
+        alertMsg.style.display = 'block';
+        setTimeout(function() { location.reload(); }, 300);
       }
-    }
+    });
   </script>
 
-  <!-- Injects the mod directly onto this test page -->
+  <!-- Mod Injector Content Script -->
   <script src="/injector/loader.js"></script>
 </body>
 </html>

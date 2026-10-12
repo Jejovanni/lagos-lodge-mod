@@ -12,7 +12,10 @@
 (async function LagosLodgeMod() {
   'use strict';
 
-  const MOD_API_BASE = 'https://your-netlify-app.netlify.app/api'; // replace with real URL
+  // If hosted on Netlify, uses window.location.origin, otherwise falls back to configured host
+  const MOD_API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('netlify.app')
+    ? `${window.location.origin}/api`
+    : 'https://your-netlify-app.netlify.app/api';
   const STORAGE_KEY_LICENSE = 'lodge_license_key';
   const STORAGE_KEY_SESSION = 'lodge_session_token';
   const STORAGE_KEY_TIER    = 'lodge_tier';

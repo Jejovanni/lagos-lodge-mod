@@ -19,13 +19,24 @@
   const STORAGE_KEY_TIER    = 'lodge_tier';
 
   // ── 2. Retrieve stored license key ───────────────────────
-  const licenseKey = localStorage.getItem(STORAGE_KEY_LICENSE);
+  let licenseKey = localStorage.getItem(STORAGE_KEY_LICENSE);
+
+  // If running as extension, also check chrome.storage
+  if (!licenseKey && typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    try {
+      const sync = await chrome.storage.local.get([STORAGE_KEY_LICENSE]);
+      if (sync && sync[STORAGE_KEY_LICENSE]) {
+        licenseKey = sync[STORAGE_KEY_LICENSE];
+        localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
+      }
+    } catch (_) {}
+  }
 
   // If running in development / test simulator or test key provided, allow instant unlock
   const isDevTest = licenseKey === 'TEST-DEV-KEY-1234' || window.location.pathname.includes('test-game');
 
   if (!licenseKey && !isDevTest) {
-    console.info('[Lodge Mod] No license key found in localStorage. Mod inactive.');
+    console.info('[Lodge Mod] No license key found. Click the extension icon in your toolbar to activate your key.');
     return;
   }
 

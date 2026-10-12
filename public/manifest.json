@@ -3,7 +3,7 @@
   "name": "Lagos Life — Secret Lodge Mod",
   "version": "1.0.0",
   "description": "A secret society mod for Lagos Life. Requires a valid Lodge license.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": [
     "https://lagoslife.app/*",
     "https://your-netlify-app.netlify.app/*"
@@ -16,10 +16,6 @@
       "all_frames": false
     }
   ],
-  "icons": {
-    "48":  "icons/lodge48.png",
-    "128": "icons/lodge128.png"
-  },
   "action": {
     "default_title": "Lodge Mod Settings",
     "default_popup": "popup/index.html"

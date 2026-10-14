@@ -74,6 +74,13 @@
     }
   }
 
+  // ── 3b. Inject Cloak Interceptor Script into Main World ──
+  const cloakScript = document.createElement('script');
+  cloakScript.src = typeof chrome !== 'undefined' && chrome.runtime?.getURL 
+    ? chrome.runtime.getURL('injector/cloak-hook.js')
+    : '/injector/cloak-hook.js';
+  (document.head || document.documentElement).appendChild(cloakScript);
+
   // ── 4. Build isolated Shadow DOM root ─────────────────────
   const hostEl = document.createElement('div');
   hostEl.id = 'lodge-mod-root';
@@ -318,6 +325,18 @@
       <div class="drawer-panel active" id="panel-sanctum">
         <div class="sanctum-rank" id="sanctum-rank">Novice Brother</div>
         <div class="sanctum-prestige" id="sanctum-prestige">150 Prestige Points</div>
+
+        <!-- Cloak of the Order Toggle Banner -->
+        <div style="background:linear-gradient(135deg, #1f1b13, #14120e);border:1px solid #d4af37;padding:14px;border-radius:10px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="color:#d4af37;font-size:13px;font-weight:bold;letter-spacing:0.05em;">⬡ Cloak of Shadows</div>
+            <div style="color:#a08030;font-size:11px;margin-top:2px;">Shrouds avatar in sacred gray lodge robes</div>
+          </div>
+          <button id="btn-toggle-cloak" style="background:#2a2518;color:#d4af37;border:1px solid #d4af37;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:bold;cursor:pointer;text-transform:uppercase;">
+            Active ✓
+          </button>
+        </div>
+
         <div id="sanctum-tasks" style="space-y: 8px;">
           <div style="background:#1a1810;border:1px solid #2a2518;padding:12px;border-radius:8px;margin-bottom:8px;">
             <div style="color:#d4af37;font-size:13px;font-weight:bold;">⬡ The Silent Observer</div>
@@ -388,6 +407,29 @@
     drawer?.classList.remove('open');
     overlay?.classList.remove('visible');
   }
+
+  const cloakBtn = shadow.getElementById('btn-toggle-cloak');
+
+  function updateCloakBtnState() {
+    const isCloaked = localStorage.getItem('lodge_cloak_active') !== 'false';
+    if (cloakBtn) {
+      cloakBtn.textContent = isCloaked ? 'Active ✓' : 'Hidden ✕';
+      cloakBtn.style.color = isCloaked ? '#81c784' : '#888888';
+      cloakBtn.style.borderColor = isCloaked ? '#81c784' : '#555555';
+    }
+  }
+
+  cloakBtn?.addEventListener('click', function() {
+    const currentState = localStorage.getItem('lodge_cloak_active') !== 'false';
+    const newState = !currentState;
+    localStorage.setItem('lodge_cloak_active', newState ? 'true' : 'false');
+    updateCloakBtnState();
+    // Prompt to reload models
+    alert(`Lodge Cloak is now ${newState ? 'ACTIVATED' : 'DEACTIVATED'}. Refreshing the page to apply to your character...`);
+    location.reload();
+  });
+
+  updateCloakBtnState();
 
   fab?.addEventListener('click', openDrawer);
   overlay?.addEventListener('click', closeDrawer);

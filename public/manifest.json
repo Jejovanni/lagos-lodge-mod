@@ -11,6 +11,13 @@
   "content_scripts": [
     {
       "matches": ["https://lagoslife.app/*"],
+      "js": ["injector/cloak-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://lagoslife.app/*"],
       "js": ["injector/loader.js"],
       "run_at": "document_idle",
       "all_frames": false
@@ -19,5 +26,11 @@
   "action": {
     "default_title": "Lodge Mod Settings",
     "default_popup": "popup/index.html"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injector/cloak-hook.js"],
+      "matches": ["https://lagoslife.app/*"]
+    }
+  ]
 }

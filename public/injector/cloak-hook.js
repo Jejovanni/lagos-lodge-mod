@@ -157,8 +157,13 @@
   const CLOAK_TRIM_VEC3 = new Float32Array([0.28, 0.30, 0.33]);
 
   function isClothingColor(r, g, b) {
-    if (r > 0.45 && g < 0.45 && b < 0.45) return 'hoodie';
-    if (b > 0.40 && r < 0.45 && g < 0.45) return 'pants';
+    // CRITICAL FIX: Exclude skin tones (which typically have high red and moderate green)
+    const isSkin = (r > 0.4 && g > 0.25 && g < r && b < g);
+    if (isSkin) return null;
+
+    // Tightened bounds to avoid catching skin/hair
+    if (r > 0.45 && g < 0.35 && b < 0.35) return 'hoodie';
+    if (b > 0.40 && r < 0.35 && g < 0.35) return 'pants';
     if (r > 0.35 && b > 0.35 && g < 0.35 && Math.abs(r - b) < 0.2) return 'clothes';
     return null;
   }
@@ -216,19 +221,31 @@
   // 5. Scene-Graph Mesh Observer
   function applyCloakToMesh(mesh) {
     if (!mesh || !window.__lodge_cloak_enabled) return;
-    const name = (mesh.name || '').toLowerCase();
-    if (name.includes('casual_body') || name.includes('casual_legs') || name.includes('cloth') || name.includes('shirt') || name.includes('hoodie')) {
-      if (mesh.material) {
-        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        materials.forEach(mat => {
+
+    if (mesh.material) {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
+      materials.forEach(mat => {
+        const matName = (mat.name || '').toLowerCase();
+
+        // CRITICAL FIX: Explicitly ignore skin, eyes, face, and hair primitives
+        if (matName.includes('skin') || matName.includes('eye') || matName.includes('face') || matName.includes('hair')) {
+          return;
+        }
+
+        // Only target known clothing material primitives
+        if (matName.includes('purple') || matName.includes('lightblue') || matName.includes('white') || matName.includes('cloth') || matName.includes('shirt') || matName.includes('pant') || matName.includes('hoodie')) {
           if (mat && mat.color) {
-            mat.color.setRGB(0.18, 0.20, 0.22);
-            if (mat.roughness !== undefined) mat.roughness = 0.85;
-            if (mat.metalness !== undefined) mat.metalness = 0.1;
-            mat.needsUpdate = true;
+            // Only update if it's not already gray (prevents flickering/infinite loops)
+            if (Math.abs(mat.color.r - 0.18) > 0.02) {
+              mat.color.setRGB(0.18, 0.20, 0.22);
+              if (mat.roughness !== undefined) mat.roughness = 0.85;
+              if (mat.metalness !== undefined) mat.metalness = 0.1;
+              mat.needsUpdate = true;
+            }
           }
-        });
-      }
+        }
+      });
     }
   }
 

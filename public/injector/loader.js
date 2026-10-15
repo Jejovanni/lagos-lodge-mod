@@ -507,26 +507,5 @@
     }
   });
 
-  // ── 11. Restyle Crown (Main Page CSS Injection) ─────────────
-  function restyleCrown() {
-    // Check if the mod is currently toggled on
-    if (localStorage.getItem('lodge_cloak_active') === 'false') return;
-
-    const style = document.createElement('style');
-    style.id = 'lodge-crown-style';
-
-    // Injects CSS directly into the host page to target the crown
-    style.innerHTML = `
-      img[src*="crown"], .crown, .logo-crown {
-        filter: grayscale(100%) sepia(100%) hue-rotate(5deg) saturate(300%) brightness(0.9) drop-shadow(0 0 5px rgba(212, 175, 55, 0.5)) !important;
-      }
-    `;
-
-    if (!document.getElementById('lodge-crown-style')) {
-      document.head.appendChild(style);
-    }
-  }
-  restyleCrown();
-
   console.info('[Lodge Mod] Injector mounted. The Brotherhood is watching.');
 })();

@@ -17,93 +17,87 @@
     return window.__lodge_cloak_enabled;
   };
 
-  // 1. SAFE Scene-Graph Mesh Observer (The Skin-Tagging Algorithm)
   setInterval(() => {
     if (!window.__lodge_cloak_enabled) return;
-
-    // Support multiple possible access points to the Three.js scene
     const canvas = document.querySelector('canvas[data-engine*="three.js"]') || document.querySelector('canvas');
     if (!canvas || !canvas.__scene) return;
 
-    const characterGroups = new Set();
+    const characterMeshes = new Set();
 
-    // Step A: Find the character by looking for Skin
+    // 1. ISOLATE THE CHARACTER
+    // Find any mesh with skin. If we find skin, add that mesh AND all its siblings 
+    // (like the crown, shoes, and clothes) to our target list.
     canvas.__scene.traverse(node => {
       if (!node.isMesh || !node.material) return;
 
       const mats = Array.isArray(node.material) ? node.material : [node.material];
       const hasSkin = mats.some(mat => {
-        const name = (mat.name || '').toLowerCase();
-        if (name.includes('skin') || name.includes('face') || name.includes('head')) return true;
-
-        // Mathematical skin tone detection (High red, moderate green, lower blue)
+        if (mat.name && mat.name.toLowerCase().includes('skin')) return true;
+        // Mathematical skin detection
         if (mat.color && mat.color.r > 0.35 && mat.color.g > 0.20 && mat.color.b < mat.color.g) return true;
         return false;
       });
 
-      // If this mesh has skin, its parent group is the Character!
-      if (hasSkin && node.parent) {
-        characterGroups.add(node.parent);
+      if (hasSkin) {
+        characterMeshes.add(node);
+        // Add all sibling meshes in the same group (this catches the crown and shoes)
+        // We ensure node.parent is not 'Scene' so we don't accidentally grab the apartment
+        if (node.parent && node.parent.type !== 'Scene') {
+          node.parent.traverse(child => {
+            if (child.isMesh) characterMeshes.add(child);
+          });
+        }
       }
     });
 
-    // Step B: Cloak everything attached to the Character Group (except the skin/hair)
-    characterGroups.forEach(group => {
-      group.traverse(mesh => {
-        if (!mesh.isMesh || !mesh.material) return;
+    // 2. PAINT THE CHARACTER AND CROWN
+    characterMeshes.forEach(mesh => {
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
-        const applyLodgeGray = (mat) => {
-          if (!mat || !mat.color) return mat;
+      const newMats = mats.map(mat => {
+        if (!mat || !mat.color) return mat;
 
-          const matName = (mat.name || '').toLowerCase();
+        const r = mat.color.r, g = mat.color.g, b = mat.color.b;
+        const name = (mat.name || '').toLowerCase();
 
-          // 1. NEW: Explicitly catch the crown/hat BEFORE the hair filter protects it!
-          if (matName.includes('crown') || matName.includes('hat')) {
-            const newMat = mat.clone();
-            newMat.color.setRGB(0.28, 0.30, 0.33); // Slate / Silver Metallic
-            newMat.roughness = 0.2; // Make it shiny
-            newMat.metalness = 0.9; // Make it look like real metal
-            newMat.name = mat.name;
-            newMat.needsUpdate = true;
-            return newMat;
-          }
+        // Protect explicitly named body parts
+        if (name.includes('skin') || name.includes('hair') || name.includes('eye') || name.includes('face')) return mat;
 
-          // 2. Protect body parts by name
-          if (matName.includes('skin') || matName.includes('eye') || matName.includes('face') || matName.includes('hair') || matName.includes('head')) {
-            return mat;
-          }
+        // Protect skin by color
+        const isSkin = (r > 0.35 && g > 0.20 && b < g);
+        if (isSkin) return mat;
 
-          const r = mat.color.r, g = mat.color.g, b = mat.color.b;
-
-          // 3. Protect body parts by color
-          const isSkin = (r > 0.35 && g > 0.20 && b < g);
-          const isBlondeBrownHair = (r > 0.45 && g > 0.35 && b < 0.3);
-          const isBlackHair = (r < 0.15 && g < 0.15 && b < 0.15);
-
-          if (isSkin || isBlondeBrownHair || isBlackHair) return mat;
-
-          if (Math.abs(mat.color.r - 0.18) < 0.02) return mat;
-
-          // 4. Paint the clothes
+        // Is it the Crown? (Target high-saturation gold)
+        const isGoldCrown = name.includes('crown') || name.includes('gold') || (r > 0.6 && g > 0.4 && b < 0.25);
+        if (isGoldCrown) {
+          if (Math.abs(r - 0.28) < 0.02) return mat; // Already silver
           const newMat = mat.clone();
-          newMat.color.setRGB(0.18, 0.20, 0.22);
-          if (newMat.roughness !== undefined) newMat.roughness = 0.85;
-          if (newMat.metalness !== undefined) newMat.metalness = 0.1;
-          newMat.name = mat.name;
+          newMat.color.setRGB(0.28, 0.30, 0.33); // Metallic Silver
+          newMat.metalness = 0.9;
+          newMat.roughness = 0.2;
           newMat.needsUpdate = true;
-
           return newMat;
-        };
-
-        if (Array.isArray(mesh.material)) {
-          mesh.material = mesh.material.map(applyLodgeGray);
-        } else {
-          mesh.material = applyLodgeGray(mesh.material);
         }
+
+        // Protect hair by color (checked after crown so we don't accidentally protect the gold crown)
+        const isBlondeBrownHair = (r > 0.45 && g > 0.35 && b < 0.3);
+        const isBlackHair = (r < 0.15 && g < 0.15 && b < 0.15);
+        if (isBlondeBrownHair || isBlackHair) return mat;
+
+        // It must be clothing! Paint it Lodge Gray.
+        if (Math.abs(r - 0.18) < 0.02) return mat; // Already gray
+        const newMat = mat.clone();
+        newMat.color.setRGB(0.18, 0.20, 0.22); // Charcoal Gray
+        newMat.metalness = 0.1;
+        newMat.roughness = 0.85;
+        newMat.needsUpdate = true;
+        return newMat;
       });
+
+      mesh.material = Array.isArray(mesh.material) ? newMats : newMats[0];
     });
 
   }, 1000);
 
-  console.info('[Lodge Mod] Skin-Tagging Cloak Interceptor Active.');
+  console.info('[Lodge Mod] Advanced Sibling-Tagging Interceptor Active.');
 })();

@@ -45,16 +45,17 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :host { all: initial; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-    /* LRI Floating Action Button */
+    /* LRI Floating Action Button - Positioned safely above the bottom navigation bar */
     #lri-fab {
-      position: fixed; bottom: 90px; right: 20px; width: 50px; height: 50px;
+      position: fixed; bottom: 85px; right: 20px; width: 52px; height: 52px;
       border-radius: 50%; background: #ffffff;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.1);
       cursor: pointer; pointer-events: auto !important; display: flex; align-items: center; justify-content: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease; border: 1px solid #e2e8f0; z-index: 2147483646;
+      transition: transform 0.2s ease, box-shadow 0.2s ease; border: 2px solid #e2e8f0; z-index: 2147483646;
+      overflow: hidden;
     }
-    #lri-fab:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
-    #lri-fab svg { width: 24px; height: 24px; fill: #10b981; }
+    #lri-fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+    #lri-fab img { width: 100%; height: 100%; object-fit: cover; }
 
     /* Slide-up Drawer matching game card style */
     #lri-drawer {
@@ -71,6 +72,7 @@
     /* Header & Ledger Row */
     .lri-header { padding: 0 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; }
     .lri-title { font-size: 16px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .lri-logo-thumb { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; }
     .lri-ledger-badge { font-size: 11px; background: #f0fdf4; color: #16a34a; padding: 4px 10px; border-radius: 12px; font-weight: 600; border: 1px solid #bbf7d0; }
 
     /* Tabs */
@@ -96,20 +98,28 @@
     #lri-overlay.visible { display: block; }
   `;
 
-  // ── Render HTML Structure ─────────────────────────────────
+  // ── Render HTML Structure with LRI Logo Integration ────────
+  // Note: Place your LRI logo image file in your extension's public folder as 'lri-logo.jpg'
+  const logoUrl = typeof chrome !== 'undefined' && chrome.runtime?.getURL
+    ? chrome.runtime.getURL('lri-logo.jpg')
+    : '/lri-logo.jpg';
+
   shadow.innerHTML = `
     <style>${style.textContent}</style>
     <div id="lri-overlay"></div>
 
     <button id="lri-fab" aria-label="Open LRI Dashboard" title="Lagos Research Initiative">
-      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <img src="${logoUrl}" alt="LRI Logo" />
     </button>
 
     <div id="lri-drawer" role="dialog" aria-modal="true">
       <div class="drawer-handle" id="lri-drag-handle"></div>
 
       <div class="lri-header">
-        <div class="lri-title">🏛️ Lagos Research Initiative</div>
+        <div class="lri-title">
+          <img src="${logoUrl}" class="lri-logo-thumb" alt="Logo" />
+          Lagos Research Initiative
+        </div>
         <div class="lri-ledger-badge" id="member-count-badge">42 Active Fellows</div>
       </div>
 
@@ -141,12 +151,12 @@
         </div>
       </div>
 
-      <!-- Tab 3: Candidate Lobby / Petitions -->
+      <!-- Tab 3: Candidate Lobby -->
       <div class="drawer-panel" id="panel-petition">
         <div class="lri-card">
           <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">🤝 Political Lobbying Portal</div>
           <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Candidates running for public office may submit their platform for official LRI research endorsement.</div>
-          <input type="text" placeholder="Candidate In-Game Handle" style="width:15px; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:8px; width:100%; font-size:13px;" id="lobby-handle" />
+          <input type="text" placeholder="Candidate In-Game Handle" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:8px; width:100%; font-size:13px;" id="lobby-handle" />
           <textarea placeholder="Outline your political platform..." style="padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:12px; width:100%; height:80px; font-size:13px;" id="lobby-platform"></textarea>
           <button class="btn-primary" id="btn-submit-lobby">Submit Platform for Review</button>
         </div>
@@ -183,5 +193,5 @@
     alert('Platform submitted to the Lagos Research Initiative board for review.');
   });
 
-  console.info('[LRI Mod] Initialized with native game aesthetic.');
+  console.info('[LRI Mod] Initialized with LRI logo branding.');
 })();

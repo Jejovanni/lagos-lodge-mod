@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Lagos Research Initiative (LRI)",
+  "version": "1.0.0",
+  "description": "Official extension and research portal for LRI fellows inside Lagos Life.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://lagoslife.app/*",
+    "https://your-netlify-app.netlify.app/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://lagoslife.app/*"
+      ],
+      "js": [
+        "injector/loader.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_title": "Lagos Research Initiative",
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "lri-logo.jpg",
+      "48": "lri-logo.jpg",
+      "128": "lri-logo.jpg"
+    }
+  },
+  "icons": {
+    "16": "lri-logo.jpg",
+    "48": "lri-logo.jpg",
+    "128": "lri-logo.jpg"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lri-logo.jpg"
+      ],
+      "matches": [
+        "https://lagoslife.app/*"
+      ]
+    }
+  ]
+}

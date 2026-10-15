@@ -14,18 +14,12 @@
   const STORAGE_KEY_SESSION = 'lri_session_token';
 
   let licenseKey = localStorage.getItem(STORAGE_KEY_LICENSE);
-  if (!licenseKey && typeof chrome !== 'undefined' && chrome.storage?.local) {
-    try {
-      const sync = await chrome.storage.local.get([STORAGE_KEY_LICENSE]);
-      if (sync?.[STORAGE_KEY_LICENSE]) {
-        licenseKey = sync[STORAGE_KEY_LICENSE];
-        localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
-      }
-    } catch (_) { }
-  }
 
-  const isDevTest = licenseKey === 'TEST-DEV-KEY-1234' || window.location.pathname.includes('test-game');
-  if (!licenseKey && !isDevTest) return;
+  // FORCE DEV TEST MODE SO IT LOADS INSTANTLY WITHOUT A KEY
+  if (!licenseKey) {
+    licenseKey = 'TEST-DEV-KEY-1234';
+    localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
+  }
 
   let sessionToken = localStorage.getItem(STORAGE_KEY_SESSION);
 

@@ -6,10 +6,6 @@
 
   if (document.getElementById('lri-mod-root')) return;
 
-  const MOD_API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('netlify.app')
-    ? `${window.location.origin}/api`
-    : 'https://your-netlify-app.netlify.app/api';
-
   const STORAGE_KEY_LICENSE = 'lri_license_key';
   const STORAGE_KEY_SESSION = 'lri_session_token';
 
@@ -20,8 +16,6 @@
     licenseKey = 'TEST-DEV-KEY-1234';
     localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
   }
-
-  let sessionToken = localStorage.getItem(STORAGE_KEY_SESSION);
 
   // ── Build Isolated Shadow DOM Root ────────────────────────
   const hostEl = document.createElement('div');
@@ -60,6 +54,7 @@
       display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
     }
     #lri-drawer.open { transform: translateY(0); }
+    #lri-drawer.disabled-mode { opacity: 0.45; pointer-events: none !important; }
 
     .drawer-handle { width: 36px; height: 4px; background: #cbd5e1; border-radius: 2px; margin: 12px auto 8px; cursor: pointer; }
 
@@ -67,7 +62,21 @@
     .lri-header { padding: 0 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; }
     .lri-title { font-size: 16px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; }
     .lri-logo-thumb { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; }
-    .lri-ledger-badge { font-size: 11px; background: #f0fdf4; color: #16a34a; padding: 4px 10px; border-radius: 12px; font-weight: 600; border: 1px solid #bbf7d0; }
+    
+    /* Toggle Switch Styles */
+    .switch-container { display: flex; align-items: center; gap: 8px; }
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1; transition: .3s; border-radius: 22px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+      background-color: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #10b981; }
+    input:checked + .slider:before { transform: translateX(18px); }
 
     /* Tabs */
     .drawer-tabs { display: flex; background: #f8fafc; padding: 4px; border-bottom: 1px solid #e2e8f0; }
@@ -88,12 +97,15 @@
     }
     .btn-primary:hover { background: #059669; }
 
+    /* Member Ledger List Styles */
+    .ledger-list { max-height: 160px; overflow-y: auto; margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
+    .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .ledger-item:last-child { border-bottom: none; }
+
     #lri-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); display: none; z-index: 2147483646; }
     #lri-overlay.visible { display: block; }
   `;
 
-  // ── Render HTML Structure with LRI Logo Integration ────────
-  // Note: Place your LRI logo image file in your extension's public folder as 'lri-logo.jpg'
   const logoUrl = typeof chrome !== 'undefined' && chrome.runtime?.getURL
     ? chrome.runtime.getURL('lri-logo.jpg')
     : '/lri-logo.jpg';
@@ -106,7 +118,7 @@
       <img src="${logoUrl}" alt="LRI Logo" />
     </button>
 
-    <div id="lri-drawer" role="dialog" aria-modal="true">
+    <div id="lri-drawer" role="dialog" aria-modal="true" class="open">
       <div class="drawer-handle" id="lri-drag-handle"></div>
 
       <div class="lri-header">
@@ -114,7 +126,13 @@
           <img src="${logoUrl}" class="lri-logo-thumb" alt="Logo" />
           Lagos Research Initiative
         </div>
-        <div class="lri-ledger-badge" id="member-count-badge">42 Active Fellows</div>
+        <div class="switch-container">
+          <span style="font-size: 11px; color: #64748b; font-weight: 600;" id="toggle-label">Active</span>
+          <label class="switch">
+            <input type="checkbox" id="lri-enable-toggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
       </div>
 
       <div class="drawer-tabs">
@@ -130,6 +148,15 @@
           <div style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 4px 0;">Senior Research Fellow</div>
           <div style="font-size: 13px; color: #10b981; font-weight: 500;">1,250 Contribution Points</div>
         </div>
+
+        <div class="lri-card">
+          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">👥 Active Fellows Ledger</div>
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 8px;">Live syndicate member clearance tracking.</div>
+          <div class="ledger-list" id="lri-ledger-container">
+            <!-- Dynamically populated rows -->
+          </div>
+        </div>
+
         <div class="lri-card">
           <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">📊 Active Policy Directives</div>
           <div style="font-size: 13px; color: #475569;">• Audit polling district 001 data flow.<br>• Coordinate regional economic research.</div>
@@ -158,20 +185,60 @@
     </div>
   `;
 
-  // ── Basic UI Interactivity Handlers ───────────────────────
+  // ── Populate Member Ledger Data ───────────────────────────
+  const members = [
+    { name: "Director Adebayo", rank: "Grand Director", pts: "4,820 pts" },
+    { name: "Dr. Chioma Okoro", rank: "Senior Fellow", pts: "3,150 pts" },
+    { name: "Operative_99", rank: "Research Fellow", pts: "1,890 pts" },
+    { name: "Tunde_Lagos", rank: "Junior Analyst", pts: "940 pts" },
+    { name: "Eko_Mind", rank: "Junior Analyst", pts: "720 pts" }
+  ];
+
+  const ledgerEl = shadow.getElementById('lri-ledger-container');
+  if (ledgerEl) {
+    ledgerEl.innerHTML = members.map(m => `
+      <div class="ledger-item">
+        <div><strong>${m.name}</strong> <span style="color: #64748b; font-size: 11px; margin-left: 4px;">(${m.rank})</span></div>
+        <div style="color: #10b981; font-weight: 600; font-size: 12px;">${m.pts}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── UI Interactivity Handlers ─────────────────────────────
   const fab = shadow.getElementById('lri-fab');
   const drawer = shadow.getElementById('lri-drawer');
   const overlay = shadow.getElementById('lri-overlay');
   const handle = shadow.getElementById('lri-drag-handle');
   const tabs = shadow.querySelectorAll('.drawer-tab');
   const panels = shadow.querySelectorAll('.drawer-panel');
+  const toggleInput = shadow.getElementById('lri-enable-toggle');
+  const toggleLabel = shadow.getElementById('toggle-label');
 
-  function openDrawer() { drawer?.classList.add('open'); overlay?.classList.add('visible'); }
+  function openDrawer() {
+    if (toggleInput?.checked) {
+      drawer?.classList.add('open');
+      overlay?.classList.add('visible');
+    }
+  }
   function closeDrawer() { drawer?.classList.remove('open'); overlay?.classList.remove('visible'); }
 
   fab?.addEventListener('click', openDrawer);
   overlay?.addEventListener('click', closeDrawer);
   handle?.addEventListener('click', closeDrawer);
+
+  // Toggle Extension On/Off
+  toggleInput?.addEventListener('change', (e) => {
+    const isEnabled = e.target.checked;
+    if (isEnabled) {
+      drawer?.classList.remove('disabled-mode');
+      toggleLabel.textContent = "Active";
+      openDrawer();
+    } else {
+      drawer?.classList.add('disabled-mode');
+      toggleLabel.textContent = "Off";
+      closeDrawer();
+    }
+  });
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -187,5 +254,5 @@
     alert('Platform submitted to the Lagos Research Initiative board for review.');
   });
 
-  console.info('[LRI Mod] Initialized with LRI logo branding.');
+  console.info('[LRI Mod] Initialized with Toggle Switch and Member Ledger.');
 })();

@@ -223,25 +223,49 @@
   function applyCloakToMesh(mesh) {
     if (!mesh || !window.__lodge_cloak_enabled) return;
 
-    if (mesh.material) {
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    const meshName = (mesh.name || '').toLowerCase();
 
-      materials.forEach(mat => {
+    // STRICT FILTER: Only target character geometry
+    const isCharacter = meshName.includes('casual_body') ||
+      meshName.includes('casual_legs') ||
+      meshName.includes('cloth') ||
+      meshName.includes('shirt') ||
+      meshName.includes('pant') ||
+      meshName.includes('hoodie');
+
+    if (!isCharacter) return;
+
+    if (mesh.material) {
+      // Helper function to safely clone and paint materials
+      const applyLodgeGray = (mat) => {
+        if (!mat || !mat.color) return mat;
+
         const matName = (mat.name || '').toLowerCase();
 
-        // Explicitly protect all body parts from being painted
+        // Protect body parts
         if (matName.includes('skin') || matName.includes('eye') || matName.includes('face') || matName.includes('hair') || matName.includes('head')) {
-          return;
+          return mat;
         }
 
-        // Turn everything else (pants, shoes, accessories) into the Lodge uniform
-        if (mat && mat.color && Math.abs(mat.color.r - 0.18) > 0.02) {
-          mat.color.setRGB(0.18, 0.20, 0.22); // Charcoal gray
-          if (mat.roughness !== undefined) mat.roughness = 0.85;
-          if (mat.metalness !== undefined) mat.metalness = 0.1;
-          mat.needsUpdate = true;
-        }
-      });
+        // If it's already our exact gray, skip to prevent infinite cloning
+        if (Math.abs(mat.color.r - 0.18) < 0.02) return mat;
+
+        // CRITICAL FIX: Clone the material so we don't paint the entire world!
+        const newMat = mat.clone();
+        newMat.color.setRGB(0.18, 0.20, 0.22);
+        if (newMat.roughness !== undefined) newMat.roughness = 0.85;
+        if (newMat.metalness !== undefined) newMat.metalness = 0.1;
+        newMat.needsUpdate = true;
+
+        return newMat;
+      };
+
+      // Apply the safe clone function to the mesh's material(s)
+      if (Array.isArray(mesh.material)) {
+        mesh.material = mesh.material.map(applyLodgeGray);
+      } else {
+        mesh.material = applyLodgeGray(mesh.material);
+      }
     }
   }
 

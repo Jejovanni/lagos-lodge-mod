@@ -57,24 +57,34 @@
 
           const matName = (mat.name || '').toLowerCase();
 
-          // Protect body parts by name
+          // 1. NEW: Explicitly catch the crown/hat BEFORE the hair filter protects it!
+          if (matName.includes('crown') || matName.includes('hat')) {
+            const newMat = mat.clone();
+            newMat.color.setRGB(0.28, 0.30, 0.33); // Slate / Silver Metallic
+            newMat.roughness = 0.2; // Make it shiny
+            newMat.metalness = 0.9; // Make it look like real metal
+            newMat.name = mat.name;
+            newMat.needsUpdate = true;
+            return newMat;
+          }
+
+          // 2. Protect body parts by name
           if (matName.includes('skin') || matName.includes('eye') || matName.includes('face') || matName.includes('hair') || matName.includes('head')) {
             return mat;
           }
 
           const r = mat.color.r, g = mat.color.g, b = mat.color.b;
 
-          // Protect body parts by color
+          // 3. Protect body parts by color
           const isSkin = (r > 0.35 && g > 0.20 && b < g);
           const isBlondeBrownHair = (r > 0.45 && g > 0.35 && b < 0.3);
           const isBlackHair = (r < 0.15 && g < 0.15 && b < 0.15);
 
           if (isSkin || isBlondeBrownHair || isBlackHair) return mat;
 
-          // If already Lodge Gray, skip to prevent infinite cloning
           if (Math.abs(mat.color.r - 0.18) < 0.02) return mat;
 
-          // CLONE the material so we don't accidentally paint the apartment
+          // 4. Paint the clothes
           const newMat = mat.clone();
           newMat.color.setRGB(0.18, 0.20, 0.22);
           if (newMat.roughness !== undefined) newMat.roughness = 0.85;

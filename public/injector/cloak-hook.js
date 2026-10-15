@@ -8,8 +8,6 @@
   window.__LODGE_CLOAK_HOOKED__ = true;
 
   const CLOAK_STORAGE_KEY = 'lodge_cloak_active';
-
-  // State: enabled by default if mod is active
   window.__lodge_cloak_enabled = localStorage.getItem(CLOAK_STORAGE_KEY) !== 'false';
 
   window.toggleLodgeCloak = function (enable) {
@@ -19,21 +17,18 @@
     return window.__lodge_cloak_enabled;
   };
 
-  // Helper: modify GLB arrayBuffer to restyle clothing into gray cloak
+  // 1. Helper: modify GLB arrayBuffer
   function applyCloakToGLB(arrayBuffer) {
     try {
       const view = new DataView(arrayBuffer);
-      const magic = view.getUint32(0, true);
-      if (magic !== 0x46546C67) return arrayBuffer; // Not glTF
+      if (view.getUint32(0, true) !== 0x46546C67) return arrayBuffer;
 
       const totalLen = view.getUint32(8, true);
       const jsonChunkLen = view.getUint32(12, true);
-      const jsonChunkType = view.getUint32(16, true);
-      if (jsonChunkType !== 0x4E4F534A) return arrayBuffer; // Not JSON
+      if (view.getUint32(16, true) !== 0x4E4F534A) return arrayBuffer;
 
       const jsonBytes = new Uint8Array(arrayBuffer, 20, jsonChunkLen);
-      const jsonString = new TextDecoder().decode(jsonBytes);
-      const gltf = JSON.parse(jsonString);
+      const gltf = JSON.parse(new TextDecoder().decode(jsonBytes));
 
       const CLOAK_DARK_GRAY = [0.18, 0.19, 0.21, 1.0];
       const CLOAK_MID_GRAY = [0.28, 0.30, 0.33, 1.0];
@@ -64,10 +59,8 @@
       const unaligned = newJsonString.length % 4;
       if (unaligned !== 0) newJsonString += ' '.repeat(4 - unaligned);
 
-      const encoder = new TextEncoder();
-      const newJsonBytes = encoder.encode(newJsonString);
-      const binChunkOffset = 20 + jsonChunkLen;
-      const binChunkBytes = new Uint8Array(arrayBuffer, binChunkOffset);
+      const newJsonBytes = new TextEncoder().encode(newJsonString);
+      const binChunkBytes = new Uint8Array(arrayBuffer, 20 + jsonChunkLen);
       const newTotalLen = 20 + newJsonBytes.byteLength + binChunkBytes.byteLength;
       const newBuffer = new ArrayBuffer(newTotalLen);
       const newView = new DataView(newBuffer);
@@ -86,17 +79,15 @@
     }
   }
 
-  // 1. Hook window.fetch
-  const originalFetch = window.fetch;
-  window.fetch = async function (...args) {
-    const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
+  // 2. Network & Cache Interceptors
+  async function interceptModelFetch(request, originalMethod, ...args) {
+    const url = typeof request === 'string' ? request : (request && request.url) || '';
     if (window.__lodge_cloak_enabled && (url.includes('/models/chars/') || url.includes('m_casual') || url.includes('f_casual'))) {
-      const response = await originalFetch.apply(this, args);
+      const response = await originalMethod.apply(this, args);
       try {
         const cloned = response.clone();
         const buffer = await cloned.arrayBuffer();
-        const modifiedBuffer = applyCloakToGLB(buffer);
-        return new Response(modifiedBuffer, {
+        return new Response(applyCloakToGLB(buffer), {
           status: response.status,
           statusText: response.statusText,
           headers: response.headers
@@ -105,10 +96,15 @@
         return response;
       }
     }
-    return originalFetch.apply(this, args);
-  };
+    return originalMethod.apply(this, args);
+  }
 
-  // 2. Hook XMLHttpRequest
+  const originalFetch = window.fetch;
+  window.fetch = function (...args) { return interceptModelFetch.call(this, args[0], originalFetch, ...args); };
+
+  const originalCacheMatch = Cache.prototype.match;
+  Cache.prototype.match = function (request, options) { return interceptModelFetch.call(this, request, originalCacheMatch, request, options); };
+
   const originalOpen = XMLHttpRequest.prototype.open;
   const originalSend = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
@@ -120,8 +116,7 @@
       this.addEventListener('load', function () {
         if (this.responseType === 'arraybuffer' && this.response) {
           try {
-            const modified = applyCloakToGLB(this.response);
-            Object.defineProperty(this, 'response', { writable: true, value: modified });
+            Object.defineProperty(this, 'response', { writable: true, value: applyCloakToGLB(this.response) });
           } catch (_) { }
         }
       });
@@ -129,97 +124,7 @@
     return originalSend.apply(this, args);
   };
 
-  // 3. Cache API Interceptor (Fixes ll-assets-v1 cache loading)
-  const originalCacheMatch = Cache.prototype.match;
-  Cache.prototype.match = async function (request, options) {
-    const response = await originalCacheMatch.call(this, request, options);
-    if (!response) return response;
-    const url = typeof request === 'string' ? request : request.url;
-    if (window.__lodge_cloak_enabled && url && (url.includes('/models/chars/') || url.includes('m_casual') || url.includes('f_casual'))) {
-      try {
-        const cloned = response.clone();
-        const buffer = await cloned.arrayBuffer();
-        const modifiedBuffer = applyCloakToGLB(buffer);
-        return new Response(modifiedBuffer, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: response.headers
-        });
-      } catch (err) {
-        return response;
-      }
-    }
-    return response;
-  };
-
-  // 4. WebGL Shader Uniform & Draw Interceptor
-  const CLOAK_COLOR_VEC3 = new Float32Array([0.18, 0.20, 0.22]);
-  const CLOAK_TRIM_VEC3 = new Float32Array([0.28, 0.30, 0.33]);
-
-  function isClothingColor(r, g, b) {
-    // Broadly exclude skin tones (usually high red, moderate green, low blue)
-    const isSkin = (r > 0.35 && g > 0.20 && b < g);
-
-    // Broadly exclude blonde/brown hair (high red and green, low blue)
-    const isHair = (r > 0.45 && g > 0.35 && b < 0.3);
-
-    if (isSkin || isHair) return null;
-
-    // If it is not skin or hair, classify it as clothing to be overridden
-    return 'clothes';
-  }
-
-  function hookWebGLContext(proto) {
-    if (!proto || proto.__lodge_hooked) return;
-    proto.__lodge_hooked = true;
-
-    const origUniform3fv = proto.uniform3fv;
-    proto.uniform3fv = function (location, value, ...rest) {
-      if (window.__lodge_cloak_enabled && value && value.length >= 3) {
-        const type = isClothingColor(value[0], value[1], value[2]);
-        if (type) return origUniform3fv.call(this, location, type === 'pants' ? CLOAK_TRIM_VEC3 : CLOAK_COLOR_VEC3, ...rest);
-      }
-      return origUniform3fv.apply(this, [location, value, ...rest]);
-    };
-
-    const origUniform3f = proto.uniform3f;
-    proto.uniform3f = function (location, x, y, z) {
-      if (window.__lodge_cloak_enabled) {
-        const type = isClothingColor(x, y, z);
-        if (type) {
-          const rep = type === 'pants' ? CLOAK_TRIM_VEC3 : CLOAK_COLOR_VEC3;
-          return origUniform3f.call(this, location, rep[0], rep[1], rep[2]);
-        }
-      }
-      return origUniform3f.call(this, location, x, y, z);
-    };
-
-    const origUniform4fv = proto.uniform4fv;
-    proto.uniform4fv = function (location, value, ...rest) {
-      if (window.__lodge_cloak_enabled && value && value.length >= 4) {
-        const type = isClothingColor(value[0], value[1], value[2]);
-        if (type) {
-          const replacement = new Float32Array([0.18, 0.20, 0.22, value[3] || 1.0]);
-          return origUniform4fv.call(this, location, replacement, ...rest);
-        }
-      }
-      return origUniform4fv.apply(this, [location, value, ...rest]);
-    };
-
-    const origUniform4f = proto.uniform4f;
-    proto.uniform4f = function (location, r, g, b, a) {
-      if (window.__lodge_cloak_enabled) {
-        const type = isClothingColor(r, g, b);
-        if (type) return origUniform4f.call(this, location, 0.18, 0.20, 0.22, a);
-      }
-      return origUniform4f.call(this, location, r, g, b, a);
-    };
-  }
-
-  if (typeof WebGLRenderingContext !== 'undefined') hookWebGLContext(WebGLRenderingContext.prototype);
-  if (typeof WebGL2RenderingContext !== 'undefined') hookWebGLContext(WebGL2RenderingContext.prototype);
-
-  // 5. Scene-Graph Mesh Observer
+  // 3. SAFE Scene-Graph Mesh Observer
   function applyCloakToMesh(mesh) {
     if (!mesh || !window.__lodge_cloak_enabled) return;
 
@@ -236,7 +141,6 @@
     if (!isCharacter) return;
 
     if (mesh.material) {
-      // Helper function to safely clone and paint materials
       const applyLodgeGray = (mat) => {
         if (!mat || !mat.color) return mat;
 
@@ -247,10 +151,9 @@
           return mat;
         }
 
-        // If it's already our exact gray, skip to prevent infinite cloning
         if (Math.abs(mat.color.r - 0.18) < 0.02) return mat;
 
-        // CRITICAL FIX: Clone the material so we don't paint the entire world!
+        // Clone the material to decouple it from the rest of the world
         const newMat = mat.clone();
         newMat.color.setRGB(0.18, 0.20, 0.22);
         if (newMat.roughness !== undefined) newMat.roughness = 0.85;
@@ -260,7 +163,6 @@
         return newMat;
       };
 
-      // Apply the safe clone function to the mesh's material(s)
       if (Array.isArray(mesh.material)) {
         mesh.material = mesh.material.map(applyLodgeGray);
       } else {

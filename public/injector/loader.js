@@ -16,7 +16,7 @@
 
   const STORAGE_KEY_LICENSE = 'lodge_license_key';
   const STORAGE_KEY_SESSION = 'lodge_session_token';
-  const STORAGE_KEY_TIER    = 'lodge_tier';
+  const STORAGE_KEY_TIER = 'lodge_tier';
 
   // ── 2. Retrieve stored license key ───────────────────────
   let licenseKey = localStorage.getItem(STORAGE_KEY_LICENSE);
@@ -29,7 +29,7 @@
         licenseKey = sync[STORAGE_KEY_LICENSE];
         localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   // If running in development / test simulator or test key provided, allow instant unlock
@@ -76,7 +76,7 @@
 
   // ── 3b. Inject Cloak Interceptor Script into Main World ──
   const cloakScript = document.createElement('script');
-  cloakScript.src = typeof chrome !== 'undefined' && chrome.runtime?.getURL 
+  cloakScript.src = typeof chrome !== 'undefined' && chrome.runtime?.getURL
     ? chrome.runtime.getURL('injector/cloak-hook.js')
     : '/injector/cloak-hook.js';
   (document.head || document.documentElement).appendChild(cloakScript);
@@ -390,12 +390,12 @@
   `;
 
   // ── 8. Elements & Listeners ─────────────────────────────────
-  const fab      = shadow.getElementById('lodge-fab');
-  const drawer   = shadow.getElementById('lodge-drawer');
-  const overlay  = shadow.getElementById('lodge-overlay');
-  const handle   = shadow.getElementById('lodge-drag-handle');
-  const tabs     = shadow.querySelectorAll('.drawer-tab');
-  const panels   = shadow.querySelectorAll('.drawer-panel');
+  const fab = shadow.getElementById('lodge-fab');
+  const drawer = shadow.getElementById('lodge-drawer');
+  const overlay = shadow.getElementById('lodge-overlay');
+  const handle = shadow.getElementById('lodge-drag-handle');
+  const tabs = shadow.querySelectorAll('.drawer-tab');
+  const panels = shadow.querySelectorAll('.drawer-panel');
 
   function openDrawer() {
     drawer?.classList.add('open');
@@ -419,7 +419,7 @@
     }
   }
 
-  cloakBtn?.addEventListener('click', function() {
+  cloakBtn?.addEventListener('click', function () {
     const currentState = localStorage.getItem('lodge_cloak_active') !== 'false';
     const newState = !currentState;
     localStorage.setItem('lodge_cloak_active', newState ? 'true' : 'false');
@@ -435,11 +435,11 @@
   overlay?.addEventListener('click', closeDrawer);
   handle?.addEventListener('click', closeDrawer);
 
-  tabs.forEach(function(tab) {
-    tab.addEventListener('click', function() {
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
       const target = tab.getAttribute('data-panel');
-      tabs.forEach(function(t) { t.classList.remove('active'); });
-      panels.forEach(function(p) { p.classList.remove('active'); });
+      tabs.forEach(function (t) { t.classList.remove('active'); });
+      panels.forEach(function (p) { p.classList.remove('active'); });
       tab.classList.add('active');
       shadow.getElementById('panel-' + target)?.classList.add('active');
     });
@@ -465,7 +465,7 @@
   }
 
   // ── 10. Form submission ─────────────────────────────────────
-  shadow.getElementById('petition-form')?.addEventListener('submit', async function(e) {
+  shadow.getElementById('petition-form')?.addEventListener('submit', async function (e) {
     e.preventDefault();
     const form = e.target;
     const msgEl = shadow.getElementById('petition-msg');
@@ -506,6 +506,27 @@
       msgEl.textContent = '✓ Petition simulated. The Lodge has acknowledged you.';
     }
   });
+
+  // ── 11. Restyle Crown (Main Page CSS Injection) ─────────────
+  function restyleCrown() {
+    // Check if the mod is currently toggled on
+    if (localStorage.getItem('lodge_cloak_active') === 'false') return;
+
+    const style = document.createElement('style');
+    style.id = 'lodge-crown-style';
+
+    // Injects CSS directly into the host page to target the crown
+    style.innerHTML = `
+      img[src*="crown"], .crown, .logo-crown {
+        filter: grayscale(100%) sepia(100%) hue-rotate(5deg) saturate(300%) brightness(0.9) drop-shadow(0 0 5px rgba(212, 175, 55, 0.5)) !important;
+      }
+    `;
+
+    if (!document.getElementById('lodge-crown-style')) {
+      document.head.appendChild(style);
+    }
+  }
+  restyleCrown();
 
   console.info('[Lodge Mod] Injector mounted. The Brotherhood is watching.');
 })();

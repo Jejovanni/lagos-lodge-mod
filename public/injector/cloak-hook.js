@@ -128,18 +128,27 @@
   function applyCloakToMesh(mesh) {
     if (!mesh || !window.__lodge_cloak_enabled) return;
 
-    const meshName = (mesh.name || '').toLowerCase();
+    // 1. Bulletproof Character Detection
+    // Check if the mesh has a skeleton (isSkinnedMesh) OR if it belongs to a character group
+    let isCharacter = false;
+    if (mesh.isSkinnedMesh) {
+      isCharacter = true;
+    } else {
+      // Check parents just in case clothes are static meshes attached to bones
+      let current = mesh;
+      while (current && !isCharacter) {
+        const name = (current.name || '').toLowerCase();
+        if (name.includes('casual') || name.includes('avatar') || name.includes('player')) {
+          isCharacter = true;
+        }
+        current = current.parent;
+      }
+    }
 
-    // STRICT FILTER: Only target character geometry
-    const isCharacter = meshName.includes('casual_body') ||
-      meshName.includes('casual_legs') ||
-      meshName.includes('cloth') ||
-      meshName.includes('shirt') ||
-      meshName.includes('pant') ||
-      meshName.includes('hoodie');
-
+    // If it's static furniture or the map, ignore it completely
     if (!isCharacter) return;
 
+    // 2. Safe Material Cloning & Painting
     if (mesh.material) {
       const applyLodgeGray = (mat) => {
         if (!mat || !mat.color) return mat;
@@ -147,10 +156,11 @@
         const matName = (mat.name || '').toLowerCase();
 
         // Protect body parts
-        if (matName.includes('skin') || matName.includes('eye') || matName.includes('face') || matName.includes('hair') || matName.includes('head')) {
+        if (matName.includes('skin') || matName.includes('eye') || matName.includes('face') || matName.includes('hair') || matName.includes('head') || matName.includes('eyebrow')) {
           return mat;
         }
 
+        // If it is already exactly our gray, skip to prevent infinite cloning
         if (Math.abs(mat.color.r - 0.18) < 0.02) return mat;
 
         // Clone the material to decouple it from the rest of the world
@@ -158,6 +168,7 @@
         newMat.color.setRGB(0.18, 0.20, 0.22);
         if (newMat.roughness !== undefined) newMat.roughness = 0.85;
         if (newMat.metalness !== undefined) newMat.metalness = 0.1;
+        newMat.name = mat.name; // Preserve original name for future checks
         newMat.needsUpdate = true;
 
         return newMat;

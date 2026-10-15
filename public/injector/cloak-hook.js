@@ -17,87 +17,123 @@
     return window.__lodge_cloak_enabled;
   };
 
-  setInterval(() => {
-    if (!window.__lodge_cloak_enabled) return;
-    const canvas = document.querySelector('canvas[data-engine*="three.js"]') || document.querySelector('canvas');
-    if (!canvas || !canvas.__scene) return;
+  // 1. GLB Sabotage: Paint the colors and scramble the names
+  function applyCloakToGLB(arrayBuffer) {
+    try {
+      const view = new DataView(arrayBuffer);
+      if (view.getUint32(0, true) !== 0x46546C67) return arrayBuffer; // Not glTF
 
-    const characterMeshes = new Set();
+      const totalLen = view.getUint32(8, true);
+      const jsonChunkLen = view.getUint32(12, true);
+      if (view.getUint32(16, true) !== 0x4E4F534A) return arrayBuffer; // Not JSON
 
-    // 1. ISOLATE THE CHARACTER
-    // Find any mesh with skin. If we find skin, add that mesh AND all its siblings 
-    // (like the crown, shoes, and clothes) to our target list.
-    canvas.__scene.traverse(node => {
-      if (!node.isMesh || !node.material) return;
+      const jsonBytes = new Uint8Array(arrayBuffer, 20, jsonChunkLen);
+      const gltf = JSON.parse(new TextDecoder().decode(jsonBytes));
 
-      const mats = Array.isArray(node.material) ? node.material : [node.material];
-      const hasSkin = mats.some(mat => {
-        if (mat.name && mat.name.toLowerCase().includes('skin')) return true;
-        // Mathematical skin detection
-        if (mat.color && mat.color.r > 0.35 && mat.color.g > 0.20 && mat.color.b < mat.color.g) return true;
-        return false;
-      });
+      const CLOAK_DARK_GRAY = [0.18, 0.19, 0.21, 1.0];
+      const CLOAK_SHADOW = [0.10, 0.10, 0.12, 1.0];
+      const SILVER_METALLIC = [0.28, 0.30, 0.33, 1.0];
 
-      if (hasSkin) {
-        characterMeshes.add(node);
-        // Add all sibling meshes in the same group (this catches the crown and shoes)
-        // We ensure node.parent is not 'Scene' so we don't accidentally grab the apartment
-        if (node.parent && node.parent.type !== 'Scene') {
-          node.parent.traverse(child => {
-            if (child.isMesh) characterMeshes.add(child);
-          });
-        }
+      if (Array.isArray(gltf.materials)) {
+        gltf.materials.forEach(mat => {
+          const name = (mat.name || '').toLowerCase();
+
+          // Protect skin, hair, and face explicitly
+          if (name.includes('skin') || name.includes('hair') || name.includes('eye') || name.includes('face') || name.includes('head')) {
+            return;
+          }
+
+          // Catch the Crown/Gold accessories
+          if (name.includes('crown') || name.includes('gold') || name.includes('yellow')) {
+            mat.pbrMetallicRoughness = mat.pbrMetallicRoughness || {};
+            mat.pbrMetallicRoughness.baseColorFactor = SILVER_METALLIC;
+            mat.pbrMetallicRoughness.roughnessFactor = 0.2;
+            mat.pbrMetallicRoughness.metallicFactor = 0.9;
+            // Sabotage the name so the game engine cannot override it
+            mat.name = "LODGE_LOCKED_" + mat.name;
+            return;
+          }
+
+          // Catch all default clothing names
+          if (name.includes('purple') || name.includes('lightblue') || name.includes('white') || name.includes('cloth') || name.includes('pant') || name.includes('shirt') || name.includes('shoe') || name.includes('boot') || name.includes('red') || name.includes('blue')) {
+            mat.pbrMetallicRoughness = mat.pbrMetallicRoughness || {};
+            mat.pbrMetallicRoughness.baseColorFactor = name.includes('shoe') ? CLOAK_SHADOW : CLOAK_DARK_GRAY;
+            mat.pbrMetallicRoughness.roughnessFactor = 0.85;
+            mat.pbrMetallicRoughness.metallicFactor = 0.1;
+            // Sabotage the name so the game engine cannot override it
+            mat.name = "LODGE_LOCKED_" + mat.name;
+          }
+        });
       }
-    });
 
-    // 2. PAINT THE CHARACTER AND CROWN
-    characterMeshes.forEach(mesh => {
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      let newJsonString = JSON.stringify(gltf);
+      const unaligned = newJsonString.length % 4;
+      if (unaligned !== 0) newJsonString += ' '.repeat(4 - unaligned);
 
-      const newMats = mats.map(mat => {
-        if (!mat || !mat.color) return mat;
+      const newJsonBytes = new TextEncoder().encode(newJsonString);
+      const binChunkBytes = new Uint8Array(arrayBuffer, 20 + jsonChunkLen);
+      const newTotalLen = 20 + newJsonBytes.byteLength + binChunkBytes.byteLength;
+      const newBuffer = new ArrayBuffer(newTotalLen);
+      const newView = new DataView(newBuffer);
 
-        const r = mat.color.r, g = mat.color.g, b = mat.color.b;
-        const name = (mat.name || '').toLowerCase();
+      newView.setUint32(0, 0x46546C67, true);
+      newView.setUint32(4, 2, true);
+      newView.setUint32(8, newTotalLen, true);
+      newView.setUint32(12, newJsonBytes.byteLength, true);
+      newView.setUint32(16, 0x4E4F534A, true);
+      new Uint8Array(newBuffer, 20, newJsonBytes.byteLength).set(newJsonBytes);
+      new Uint8Array(newBuffer, 20 + newJsonBytes.byteLength).set(binChunkBytes);
 
-        // Protect explicitly named body parts
-        if (name.includes('skin') || name.includes('hair') || name.includes('eye') || name.includes('face')) return mat;
+      return newBuffer;
+    } catch (e) {
+      return arrayBuffer;
+    }
+  }
 
-        // Protect skin by color
-        const isSkin = (r > 0.35 && g > 0.20 && b < g);
-        if (isSkin) return mat;
+  // 2. Network & Cache Interceptors (Now catches ALL .glb files)
+  async function interceptModelFetch(request, originalMethod, ...args) {
+    const url = typeof request === 'string' ? request : (request && request.url) || '';
+    if (window.__lodge_cloak_enabled && url.includes('.glb')) {
+      const response = await originalMethod.apply(this, args);
+      try {
+        const cloned = response.clone();
+        const buffer = await cloned.arrayBuffer();
+        return new Response(applyCloakToGLB(buffer), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers
+        });
+      } catch (err) {
+        return response;
+      }
+    }
+    return originalMethod.apply(this, args);
+  }
 
-        // Is it the Crown? (Target high-saturation gold)
-        const isGoldCrown = name.includes('crown') || name.includes('gold') || (r > 0.6 && g > 0.4 && b < 0.25);
-        if (isGoldCrown) {
-          if (Math.abs(r - 0.28) < 0.02) return mat; // Already silver
-          const newMat = mat.clone();
-          newMat.color.setRGB(0.28, 0.30, 0.33); // Metallic Silver
-          newMat.metalness = 0.9;
-          newMat.roughness = 0.2;
-          newMat.needsUpdate = true;
-          return newMat;
+  const originalFetch = window.fetch;
+  window.fetch = function (...args) { return interceptModelFetch.call(this, args[0], originalFetch, ...args); };
+
+  const originalCacheMatch = Cache.prototype.match;
+  Cache.prototype.match = function (request, options) { return interceptModelFetch.call(this, request, originalCacheMatch, request, options); };
+
+  const originalOpen = XMLHttpRequest.prototype.open;
+  const originalSend = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+    this._url = url;
+    return originalOpen.apply(this, [method, url, ...rest]);
+  };
+  XMLHttpRequest.prototype.send = function (...args) {
+    if (window.__lodge_cloak_enabled && typeof this._url === 'string' && this._url.includes('.glb')) {
+      this.addEventListener('load', function () {
+        if (this.responseType === 'arraybuffer' && this.response) {
+          try {
+            Object.defineProperty(this, 'response', { writable: true, value: applyCloakToGLB(this.response) });
+          } catch (_) { }
         }
-
-        // Protect hair by color (checked after crown so we don't accidentally protect the gold crown)
-        const isBlondeBrownHair = (r > 0.45 && g > 0.35 && b < 0.3);
-        const isBlackHair = (r < 0.15 && g < 0.15 && b < 0.15);
-        if (isBlondeBrownHair || isBlackHair) return mat;
-
-        // It must be clothing! Paint it Lodge Gray.
-        if (Math.abs(r - 0.18) < 0.02) return mat; // Already gray
-        const newMat = mat.clone();
-        newMat.color.setRGB(0.18, 0.20, 0.22); // Charcoal Gray
-        newMat.metalness = 0.1;
-        newMat.roughness = 0.85;
-        newMat.needsUpdate = true;
-        return newMat;
       });
+    }
+    return originalSend.apply(this, args);
+  };
 
-      mesh.material = Array.isArray(mesh.material) ? newMats : newMats[0];
-    });
-
-  }, 1000);
-
-  console.info('[Lodge Mod] Advanced Sibling-Tagging Interceptor Active.');
+  console.info('[Lodge Mod] Material Sabotage Interceptor Active.');
 })();

@@ -91,7 +91,7 @@ function SuccessContent() {
       <span className="text-5xl text-[#d4af37] block">⬡</span>
       <div>
         <h1 className="text-2xl font-bold tracking-widest text-[#d4af37] uppercase">
-          Welcome to the Brotherhood
+          Welcome Initiate!
         </h1>
         <p className="text-xs text-[#8b7320] tracking-widest uppercase mt-1">
           Your Offering Has Been Accepted

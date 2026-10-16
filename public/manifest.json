@@ -26,12 +26,18 @@
   ],
   "action": {
     "default_title": "Lagos Research Initiative",
-    "default_popup": "popup/index.html"
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "lri-logo.jpg",
+      "48": "lri-logo.jpg",
+      "128": "lri-logo.jpg"
+    }
   },
   "web_accessible_resources": [
     {
       "resources": [
-        "injector/loader.js"
+        "injector/loader.js",
+        "lri-logo.jpg"
       ],
       "matches": [
         "https://lagoslife.app/*"

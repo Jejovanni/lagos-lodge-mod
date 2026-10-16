@@ -28,9 +28,9 @@
     "default_title": "Lagos Research Initiative",
     "default_popup": "popup/index.html",
     "default_icon": {
-      "16": "lri-logo.jpg",
-      "48": "lri-logo.jpg",
-      "128": "lri-logo.jpg"
+      "16": "icons/icon-16.jpg",
+      "48": "icons/icon-48.jpg",
+      "128": "icons/icon-128.jpg"
     }
   },
   "web_accessible_resources": [

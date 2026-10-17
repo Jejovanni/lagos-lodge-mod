@@ -201,11 +201,21 @@
 
       <!-- Tab 3: Candidate Lobby -->
       <div class="drawer-panel" id="panel-petition">
+        <!-- Live Manifesto Board -->
         <div class="lri-card">
-          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">🤝 Political Lobbying Portal</div>
-          <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Candidates running for public office may submit their platform for official LRI endorsement.</div>
+          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">📜 Public Manifesto Board</div>
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Review platforms submitted by candidates seeking official LRI endorsement.</div>
+          
+          <div id="manifesto-board-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; max-height: 180px; overflow-y: auto; font-size: 13px; margin-bottom: 14px;">
+            Loading candidate manifestos...
+          </div>
+        </div>
+
+        <!-- Submission Form -->
+        <div class="lri-card" style="background: #f8fafc;">
+          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">🤝 Submit Your Political Platform</div>
           <input type="text" placeholder="Candidate In-Game Handle" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:8px; width:100%; font-size:13px;" id="lobby-handle" />
-          <textarea placeholder="Outline your political platform..." style="padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:12px; width:100%; height:80px; font-size:13px;" id="lobby-platform"></textarea>
+          <textarea placeholder="Outline your political platform..." style="padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:12px; width:100%; height:70px; font-size:13px;" id="lobby-platform"></textarea>
           <button class="btn-primary" id="btn-submit-lobby">Submit Platform for Review</button>
         </div>
       </div>
@@ -291,6 +301,40 @@
   }
 
   fetchShortlistedCandidates();
+
+  // ── Fetch & Render Candidate Manifestos ───────────────────
+  async function fetchManifestoBoard() {
+    const boardContainer = shadow.getElementById('manifesto-board-container');
+    if (!boardContainer) return;
+
+    try {
+      const config = getSupabaseConfig();
+      const res = await fetch(`${config.url}/rest/v1/lri_ballots_and_lobbies?type=eq.lobby_petition&select=*&order=created_at.desc`, {
+        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
+      });
+      const petitions = await res.json();
+
+      if (!petitions || petitions.length === 0) {
+        boardContainer.innerHTML = `<div style="color: #64748b; font-style: italic; text-align: center; padding: 10px;">No candidate platforms submitted to the lobby yet.</div>`;
+        return;
+      }
+
+      boardContainer.innerHTML = petitions.map(p => `
+        <div style="padding: 10px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: #0f172a; font-size: 13px;">🏛️ ${p.candidate_handle}</strong>
+            <span style="font-size: 10px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Pending Review</span>
+          </div>
+          <p style="color: #475569; font-size: 12px; line-height: 1.4; white-space: pre-wrap;">${p.platform_text}</p>
+        </div>
+      `).join('');
+
+    } catch (err) {
+      boardContainer.innerHTML = `<div style="color: #ef4444; text-align: center;">Failed to load candidate board.</div>`;
+    }
+  }
+
+  fetchManifestoBoard();
 
   // Candidacy Application Handler (First 5 Rule)
   shadow.getElementById('btn-apply-candidate')?.addEventListener('click', async () => {

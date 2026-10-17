@@ -1,32 +1,29 @@
-// public/injector/loader.js
-// Lagos Research Initiative (LRI) — Browser Extension Content Script
-
-(async function LagosLRIMod() {
-  'use strict';
-
-  if (document.getElementById('lri-mod-root')) return;
-
-  const STORAGE_KEY_LICENSE = 'lri_license_key';
-  let licenseKey = localStorage.getItem(STORAGE_KEY_LICENSE);
-
-  if (!licenseKey) {
-    licenseKey = 'TEST-DEV-KEY-1234';
-    localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
-  }
-
-  // ── Build Isolated Shadow DOM Root ────────────────────────
-  const hostEl = document.createElement('div');
-  hostEl.id = 'lri-mod-root';
-  Object.assign(hostEl.style, {
-    position: 'fixed', bottom: '0', right: '0', width: '0', height: '0', zIndex: '2147483647', pointerEvents: 'none',
-  });
-  document.body.appendChild(hostEl);
-
-  const shadow = hostEl.attachShadow({ mode: 'open' });
-
-  // ── Game-Matched Native Aesthetics & Modals ───────────────
-  const style = document.createElement('style');
-  style.textContent = `
+function e(e){return function(t,n,r=`🏛️`){let i=e.getElementById(`lri-modal-backdrop`),a=e.getElementById(`lri-modal-title`),o=e.getElementById(`lri-modal-message`),s=e.getElementById(`lri-modal-icon`);if(!i)return;a.textContent=t,o.textContent=n,s.textContent=r,i.classList.add(`visible`);let c=e.getElementById(`lri-modal-dismiss`),l=()=>{i.classList.remove(`visible`),c.removeEventListener(`click`,l)};c.onclick=l}}function t(){return{url:`https://vpxeascdekapififamic.supabase.co`,key:[`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`,`.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweGVhc2NkZWthcGlmaWZhbWljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDQ3MTUsImV4cCI6MjEwNzM4MDcxNX0`,`.Y1-x-RjX4L321prAKzXCSoqQEIL2wH5Zi5oUX_wtFhI`].join(``)}}function n(e,n){let r=localStorage.getItem(`lri_user_handle`)||`Director Adebayo`;if(r.includes(`Director`)){let t=e.getElementById(`director-desk`);t&&(t.style.display=`block`)}async function i(){let n=e.getElementById(`directives-container`);if(n)try{let e=t(),r=await(await fetch(`${e.url}/rest/v1/lri_directives?select=*&order=created_at.desc`,{headers:{apikey:e.key,Authorization:`Bearer ${e.key}`}})).json();if(!r||r.length===0){n.innerHTML=`<div style="color: #64748b; font-style: italic;">No active directives issued yet.</div>`;return}n.innerHTML=r.map(e=>`
+        <div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+          • ${e.directive_text} <span style="font-size: 11px; color: #94a3b8; display: block; margin-top: 2px;">Issued by ${e.author_handle}</span>
+        </div>
+      `).join(``)}catch{n.innerHTML=`<div style="color: #ef4444;">Failed to load directives.</div>`}}async function a(){let n=e.getElementById(`fellows-roster-container`);if(n)try{let e=t(),r=await(await fetch(`${e.url}/rest/v1/lri_members?select=in_game_handle`,{headers:{apikey:e.key,Authorization:`Bearer ${e.key}`}})).json();if(!r||r.length===0){n.innerHTML=`<div style="color: #64748b; font-style: italic;">No active fellows registered.</div>`;return}n.innerHTML=r.map(e=>`
+        <div style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
+          <strong>${e.in_game_handle}</strong>
+          <span style="font-size: 10px; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 600;">LRI Initiate</span>
+        </div>
+      `).join(``)}catch{n.innerHTML=`<div style="color: #ef4444;">Failed to load roster.</div>`}}i(),a(),e.getElementById(`btn-publish-directive`)?.addEventListener(`click`,async()=>{let a=e.getElementById(`new-directive-input`),o=a?.value.trim();if(!o)return n(`Empty Field`,`Directive text cannot be empty.`,`⚠️`);try{let e=t();if(!(await fetch(`${e.url}/rest/v1/lri_directives`,{method:`POST`,headers:{apikey:e.key,Authorization:`Bearer ${e.key}`,"Content-Type":`application/json`,Prefer:`return=minimal`},body:JSON.stringify({directive_text:o,author_handle:r})})).ok)throw Error();n(`Directive Broadcasted`,`New policy directive broadcasted successfully across the LRI network!`,`👑`),a.value=``,i()}catch{n(`Error`,`Error broadcasting directive.`,`❌`)}})}function r(e,n){async function r(){let r=e.getElementById(`shortlisted-candidates-list`);if(r)try{let i=t(),a=await(await fetch(`${i.url}/rest/v1/lri_elections?is_shortlisted=eq.true&select=*`,{headers:{apikey:i.key,Authorization:`Bearer ${i.key}`}})).json();if(!a||a.length===0){r.innerHTML=`<div style="color: #64748b; font-style: italic;">No candidates shortlisted yet. Race opens weekly.</div>`;return}r.innerHTML=a.map(e=>`
+        <div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong>${e.candidate_handle}</strong>
+            <div style="font-size: 11px; color: #64748b;">Votes: ${e.votes||0}</div>
+          </div>
+          <button class="btn-vote-candidate" data-id="${e.id}" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">Vote</button>
+        </div>
+      `).join(``),e.querySelectorAll(`.btn-vote-candidate`).forEach(e=>{e.addEventListener(`click`,()=>{n(`Ballot Cast`,`Your vote has been securely recorded on the LRI network ledger!`,`🗳️`)})})}catch{r.innerHTML=`<div style="color: #ef4444;">Error loading election ballot.</div>`}}r(),e.getElementById(`btn-apply-candidate`)?.addEventListener(`click`,async()=>{let i=e.getElementById(`candidate-apply-handle`),a=i?.value.trim();if(!a)return n(`Missing Handle`,`Please provide your in-game handle.`,`⚠️`);try{let e=t();if((await(await fetch(`${e.url}/rest/v1/lri_elections?is_shortlisted=eq.true&select=id`,{headers:{apikey:e.key,Authorization:`Bearer ${e.key}`}})).json()).length>=5)return n(`Slots Full`,`All 5 candidate slots for this week have been filled!`,`⏳`);if(!(await fetch(`${e.url}/rest/v1/lri_elections`,{method:`POST`,headers:{apikey:e.key,Authorization:`Bearer ${e.key}`,"Content-Type":`application/json`,Prefer:`return=minimal`},body:JSON.stringify({candidate_handle:a,is_shortlisted:!0,votes:0})})).ok)throw Error();n(`Slot Secured`,`Success! You secured one of the 5 candidate slots for the election.`,`🏃‍♂️`),i.value=``,r()}catch{n(`Error`,`Could not lock in candidacy slot.`,`❌`)}})}function i(e,n){async function r(){let n=e.getElementById(`manifesto-board-container`);if(n)try{let e=t(),r=await(await fetch(`${e.url}/rest/v1/lri_ballots_and_lobbies?type=eq.lobby_petition&select=*&order=created_at.desc`,{headers:{apikey:e.key,Authorization:`Bearer ${e.key}`}})).json();if(!r||r.length===0){n.innerHTML=`<div style="color: #64748b; font-style: italic; text-align: center; padding: 10px;">No candidate platforms submitted yet.</div>`;return}n.innerHTML=r.map(e=>`
+        <div style="padding: 10px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: #0f172a; font-size: 13px;">🏛️ ${e.candidate_handle}</strong>
+            <span style="font-size: 10px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Pending Review</span>
+          </div>
+          <p style="color: #475569; font-size: 12px; line-height: 1.4; white-space: pre-wrap;">${e.platform_text}</p>
+        </div>
+      `).join(``)}catch{n.innerHTML=`<div style="color: #ef4444; text-align: center;">Failed to load candidate board.</div>`}}r(),e.getElementById(`btn-submit-lobby`)?.addEventListener(`click`,async()=>{let i=e.getElementById(`lobby-handle`),a=e.getElementById(`lobby-platform`),o=i?.value.trim(),s=a?.value.trim();if(!o||!s)return n(`Missing Fields`,`Please provide both your handle and political platform.`,`⚠️`);let c=e.getElementById(`btn-submit-lobby`);c.textContent=`Submitting...`,c.disabled=!0;try{let e=t();if(!(await fetch(`${e.url}/rest/v1/lri_ballots_and_lobbies`,{method:`POST`,headers:{apikey:e.key,Authorization:`Bearer ${e.key}`,"Content-Type":`application/json`,Prefer:`return=minimal`},body:JSON.stringify({type:`lobby_petition`,candidate_handle:o,platform_text:s,votes_count:0})})).ok)throw Error();n(`Platform Submitted`,`Your platform has been successfully published to the Public Manifesto Board!`,`📜`),i.value=``,a.value=``,r()}catch{n(`Error`,`Failed to submit platform.`,`❌`)}finally{c.textContent=`Submit Platform for Review`,c.disabled=!1}})}(async function(){if(document.getElementById(`lri-mod-root`))return;let t=`lri_license_key`,a=localStorage.getItem(t);a||(a=`TEST-DEV-KEY-1234`,localStorage.setItem(t,a));let o=document.createElement(`div`);o.id=`lri-mod-root`,Object.assign(o.style,{position:`fixed`,bottom:`0`,right:`0`,width:`0`,height:`0`,zIndex:`2147483647`,pointerEvents:`none`}),document.body.appendChild(o);let s=o.attachShadow({mode:`open`}),c=document.createElement(`style`);c.textContent=`
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :host { all: initial; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
@@ -88,7 +85,6 @@
     }
     .btn-primary:hover { background: #059669; }
 
-    /* Custom Aesthetic Modal */
     #lri-modal-backdrop {
       position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center;
@@ -105,17 +101,10 @@
 
     #lri-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); display: none; z-index: 2147483646; }
     #lri-overlay.visible { display: block; }
-  `;
-
-  const logoUrl = typeof chrome !== 'undefined' && chrome.runtime?.getURL
-    ? chrome.runtime.getURL('lri-logo.jpg')
-    : '/lri-logo.jpg';
-
-  shadow.innerHTML = `
-    <style>${style.textContent}</style>
+  `;let l=typeof chrome<`u`&&chrome.runtime?.getURL?chrome.runtime.getURL(`lri-logo.jpg`):`/lri-logo.jpg`;s.innerHTML=`
+    <style>${c.textContent}</style>
     <div id="lri-overlay"></div>
 
-    <!-- Aesthetic Modal Component -->
     <div id="lri-modal-backdrop">
       <div class="lri-modal-card">
         <div id="lri-modal-icon" style="font-size: 28px; margin-bottom: 8px;">🏛️</div>
@@ -126,21 +115,21 @@
     </div>
 
     <button id="lri-fab" aria-label="Open LRI Dashboard" title="Lagos Research Initiative">
-      <img src="${logoUrl}" alt="LRI Logo" />
+      <img src="${l}" alt="LRI Logo" />
     </button>
 
-    <div id="lri-drawer" role="dialog" aria-modal="true" class="open">
+    <div id="lri-drawer" role="dialog" aria-modal="true">
       <div class="drawer-handle" id="lri-drag-handle"></div>
 
       <div class="lri-header">
         <div class="lri-title">
-          <img src="${logoUrl}" class="lri-logo-thumb" alt="Logo" />
+          <img src="${l}" class="lri-logo-thumb" alt="Logo" />
           Lagos Research Initiative
         </div>
         <div class="switch-container">
           <span style="font-size: 11px; color: #64748b; font-weight: 600;" id="toggle-label">Active</span>
           <label class="switch">
-            <input type="checkbox" id="lri-enable-toggle" checked />
+            <input type="checkbox" id="lri-enable-toggle" />
             <span class="slider"></span>
           </label>
         </div>
@@ -234,304 +223,4 @@
         </div>
       </div>
     </div>
-  `;
-
-  function getSupabaseConfig() {
-    return {
-      url: 'https://vpxeascdekapififamic.supabase.co',
-      key: ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', '.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweGVhc2NkZWthcGlmaWZhbWljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDQ3MTUsImV4cCI6MjEwNzM4MDcxNX0', '.Y1-x-RjX4L321prAKzXCSoqQEIL2wH5Zi5oUX_wtFhI'].join('')
-    };
-  }
-
-  // ── Aesthetic Modal Helper ────────────────────────────────
-  function showLriModal(title, message, icon = '🏛️') {
-    const backdrop = shadow.getElementById('lri-modal-backdrop');
-    const titleEl = shadow.getElementById('lri-modal-title');
-    const msgEl = shadow.getElementById('lri-modal-message');
-    const iconEl = shadow.getElementById('lri-modal-icon');
-
-    if (!backdrop) return;
-
-    titleEl.textContent = title;
-    msgEl.textContent = message;
-    iconEl.textContent = icon;
-    backdrop.classList.add('visible');
-
-    const dismissBtn = shadow.getElementById('lri-modal-dismiss');
-    const closeHandler = () => {
-      backdrop.classList.remove('visible');
-      dismissBtn.removeEventListener('click', closeHandler);
-    };
-    dismissBtn.onclick = closeHandler;
-  }
-
-  // ── Fetch Functions ───────────────────────────────────────
-  async function fetchDirectives() {
-    const container = shadow.getElementById('directives-container');
-    if (!container) return;
-    try {
-      const config = getSupabaseConfig();
-      const res = await fetch(`${config.url}/rest/v1/lri_directives?select=*&order=created_at.desc`, {
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
-      });
-      const directives = await res.json();
-      if (!directives || directives.length === 0) {
-        container.innerHTML = `<div style="color: #64748b; font-style: italic;">No active directives issued yet.</div>`;
-        return;
-      }
-      container.innerHTML = directives.map(d => `
-        <div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
-          • ${d.directive_text} <span style="font-size: 11px; color: #94a3b8; display: block; margin-top: 2px;">Issued by ${d.author_handle}</span>
-        </div>
-      `).join('');
-    } catch (err) {
-      container.innerHTML = `<div style="color: #ef4444;">Failed to load directives.</div>`;
-    }
-  }
-
-  async function fetchAndRenderFellowsRoster() {
-    const container = shadow.getElementById('fellows-roster-container');
-    if (!container) return;
-    try {
-      const config = getSupabaseConfig();
-      const res = await fetch(`${config.url}/rest/v1/lri_members?select=in_game_handle`, {
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
-      });
-      const members = await res.json();
-      if (!members || members.length === 0) {
-        container.innerHTML = `<div style="color: #64748b; font-style: italic;">No active fellows registered.</div>`;
-        return;
-      }
-      container.innerHTML = members.map(m => `
-        <div style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
-          <strong>${m.in_game_handle}</strong>
-          <span style="font-size: 10px; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 600;">LRI Initiate</span>
-        </div>
-      `).join('');
-    } catch (err) {
-      container.innerHTML = `<div style="color: #ef4444;">Failed to load roster.</div>`;
-    }
-  }
-
-  async function fetchManifestoBoard() {
-    const boardContainer = shadow.getElementById('manifesto-board-container');
-    if (!boardContainer) return;
-    try {
-      const config = getSupabaseConfig();
-      const res = await fetch(`${config.url}/rest/v1/lri_ballots_and_lobbies?type=eq.lobby_petition&select=*&order=created_at.desc`, {
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
-      });
-      const petitions = await res.json();
-      if (!petitions || petitions.length === 0) {
-        boardContainer.innerHTML = `<div style="color: #64748b; font-style: italic; text-align: center; padding: 10px;">No candidate platforms submitted yet.</div>`;
-        return;
-      }
-      boardContainer.innerHTML = petitions.map(p => `
-        <div style="padding: 10px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong style="color: #0f172a; font-size: 13px;">🏛️ ${p.candidate_handle}</strong>
-            <span style="font-size: 10px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Pending Review</span>
-          </div>
-          <p style="color: #475569; font-size: 12px; line-height: 1.4; white-space: pre-wrap;">${p.platform_text}</p>
-        </div>
-      `).join('');
-    } catch (err) {
-      boardContainer.innerHTML = `<div style="color: #ef4444; text-align: center;">Failed to load candidate board.</div>`;
-    }
-  }
-
-  async function fetchShortlistedCandidates() {
-    const listContainer = shadow.getElementById('shortlisted-candidates-list');
-    if (!listContainer) return;
-    try {
-      const config = getSupabaseConfig();
-      const res = await fetch(`${config.url}/rest/v1/lri_elections?is_shortlisted=eq.true&select=*`, {
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
-      });
-      const candidates = await res.json();
-      if (!candidates || candidates.length === 0) {
-        listContainer.innerHTML = `<div style="color: #64748b; font-style: italic;">No candidates shortlisted yet. Race opens weekly.</div>`;
-        return;
-      }
-      listContainer.innerHTML = candidates.map(c => `
-        <div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong>${c.candidate_handle}</strong>
-            <div style="font-size: 11px; color: #64748b;">Votes: ${c.votes || 0}</div>
-          </div>
-          <button class="btn-vote-candidate" data-id="${c.id}" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">Vote</button>
-        </div>
-      `).join('');
-
-      shadow.querySelectorAll('.btn-vote-candidate').forEach(btn => {
-        btn.addEventListener('click', () => {
-          showLriModal('Ballot Cast', 'Your vote has been securely recorded on the LRI network ledger!', '🗳️');
-        });
-      });
-    } catch (err) {
-      listContainer.innerHTML = `<div style="color: #ef4444;">Error loading election ballot.</div>`;
-    }
-  }
-
-  // Initial Fetches
-  fetchDirectives();
-  fetchAndRenderFellowsRoster();
-  fetchManifestoBoard();
-  fetchShortlistedCandidates();
-
-  const userHandle = localStorage.getItem('lri_user_handle') || 'Director Adebayo';
-  if (userHandle.includes('Director')) {
-    const desk = shadow.getElementById('director-desk');
-    if (desk) desk.style.display = 'block';
-  }
-
-  // ── Event Handlers (Using Aesthetic Modals) ───────────────
-  shadow.getElementById('btn-publish-directive')?.addEventListener('click', async () => {
-    const input = shadow.getElementById('new-directive-input');
-    const text = input?.value.trim();
-    if (!text) return showLriModal('Empty Field', 'Directive text cannot be empty.', '⚠️');
-
-    try {
-      const config = getSupabaseConfig();
-      const res = await fetch(`${config.url}/rest/v1/lri_directives`, {
-        method: 'POST',
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ directive_text: text, author_handle: userHandle })
-      });
-      if (!res.ok) throw new Error();
-      showLriModal('Directive Broadcasted', 'New policy directive broadcasted successfully across the LRI network!', '👑');
-      input.value = '';
-      fetchDirectives();
-    } catch (err) {
-      showLriModal('Error', 'Error broadcasting directive.', '❌');
-    }
-  });
-
-  shadow.getElementById('btn-apply-candidate')?.addEventListener('click', async () => {
-    const input = shadow.getElementById('candidate-apply-handle');
-    const handle = input?.value.trim();
-    if (!handle) return showLriModal('Missing Handle', 'Please provide your in-game handle.', '⚠️');
-
-    try {
-      const config = getSupabaseConfig();
-      const checkRes = await fetch(`${config.url}/rest/v1/lri_elections?is_shortlisted=eq.true&select=id`, {
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
-      });
-      const currentShortlist = await checkRes.json();
-      if (currentShortlist.length >= 5) return showLriModal('Slots Full', 'All 5 candidate slots for this week have been filled!', '⏳');
-
-      const res = await fetch(`${config.url}/rest/v1/lri_elections`, {
-        method: 'POST',
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ candidate_handle: handle, is_shortlisted: true, votes: 0 })
-      });
-      if (!res.ok) throw new Error();
-      showLriModal('Slot Secured', 'Success! You secured one of the 5 candidate slots for the election.', '🏃‍♂️');
-      input.value = '';
-      fetchShortlistedCandidates();
-    } catch (err) {
-      showLriModal('Error', 'Could not lock in candidacy slot.', '❌');
-    }
-  });
-
-  shadow.getElementById('btn-submit-lobby')?.addEventListener('click', async () => {
-    const handleInput = shadow.getElementById('lobby-handle');
-    const platformInput = shadow.getElementById('lobby-platform');
-    const handle = handleInput?.value.trim();
-    const platform = platformInput?.value.trim();
-
-    if (!handle || !platform) return showLriModal('Missing Fields', 'Please provide both your handle and political platform.', '⚠️');
-
-    const submitBtn = shadow.getElementById('btn-submit-lobby');
-    submitBtn.textContent = 'Submitting...';
-    submitBtn.disabled = true;
-
-    try {
-      const config = getSupabaseConfig();
-      const res = await fetch(`${config.url}/rest/v1/lri_ballots_and_lobbies`, {
-        method: 'POST',
-        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ type: 'lobby_petition', candidate_handle: handle, platform_text: platform, votes_count: 0 })
-      });
-      if (!res.ok) throw new Error();
-      showLriModal('Platform Submitted', 'Your platform has been successfully published to the Public Manifesto Board!', '📜');
-      handleInput.value = '';
-      platformInput.value = '';
-      fetchManifestoBoard(); // Refreshes board live
-    } catch (err) {
-      showLriModal('Error', 'Failed to submit platform.', '❌');
-    } finally {
-      submitBtn.textContent = 'Submit Platform for Review';
-      submitBtn.disabled = false;
-    }
-  });
-
-  // UI Navigation & Toggle Handlers
-  const fab = shadow.getElementById('lri-fab');
-  const drawer = shadow.getElementById('lri-drawer');
-  const overlay = shadow.getElementById('lri-overlay');
-  const handle = shadow.getElementById('lri-drag-handle');
-  const tabs = shadow.querySelectorAll('.drawer-tab');
-  const panels = shadow.querySelectorAll('.drawer-panel');
-  const toggleInput = shadow.getElementById('lri-enable-toggle');
-  const toggleLabel = shadow.getElementById('toggle-label');
-
-  function openDrawer() { if (toggleInput?.checked) { drawer?.classList.add('open'); overlay?.classList.add('visible'); } }
-  function closeDrawer() { drawer?.classList.remove('open'); overlay?.classList.remove('visible'); }
-
-  fab?.addEventListener('click', openDrawer);
-  overlay?.addEventListener('click', closeDrawer);
-  handle?.addEventListener('click', closeDrawer);
-
-  toggleInput?.addEventListener('change', (e) => {
-    if (e.target.checked) { drawer?.classList.remove('disabled-mode'); toggleLabel.textContent = "Active"; openDrawer(); }
-    else { drawer?.classList.add('disabled-mode'); toggleLabel.textContent = "Off"; closeDrawer(); }
-  });
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.getAttribute('data-panel');
-      tabs.forEach(t => t.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      shadow.getElementById('panel-' + target)?.classList.add('active');
-    });
-  });
-
-  // Sub-tabs inside Inner Sanctum
-  const subTabs = shadow.querySelectorAll('.sanctum-sub-tab');
-  const subPanels = shadow.querySelectorAll('.sanctum-sub-panel');
-  subTabs.forEach(st => {
-    st.addEventListener('click', () => {
-      const target = st.getAttribute('data-sub');
-      subTabs.forEach(t => { t.style.background = '#f8fafc'; t.style.border = '1px solid #e2e8f0'; });
-      st.style.background = '#e2e8f0'; st.style.border = 'none';
-      subPanels.forEach(p => p.style.display = 'none');
-      shadow.getElementById('sub-' + target).style.display = 'block';
-    });
-  });
-
-  // Profile Frame & Traits Injector
-  function applyLRIModifications() {
-    const profileButton = document.querySelector('button[aria-label="Open Sim panel"]');
-    if (profileButton && !profileButton.dataset.lriFramed) {
-      profileButton.dataset.lriFramed = "true";
-      profileButton.style.border = "3px solid #d97706";
-      profileButton.style.boxShadow = "none";
-      profileButton.style.overflow = "hidden";
-    }
-
-    const traitParagraphs = document.querySelectorAll('p');
-    traitParagraphs.forEach(p => {
-      if (p.textContent.includes('Traits:') && !p.textContent.includes('LRI Initiate')) {
-        p.textContent = p.textContent.trim() + ' · LRI Initiate';
-      }
-    });
-  }
-
-  applyLRIModifications();
-  const lriObserver = new MutationObserver(() => { applyLRIModifications(); });
-  lriObserver.observe(document.body, { childList: true, subtree: true });
-
-  console.info('[LRI Mod] Fully Loaded: Political Syndicate Engine Active.');
-})();
+  `;let u=e(s);n(s,u),r(s,u),i(s,u);let d=s.getElementById(`lri-fab`),f=s.getElementById(`lri-drawer`),p=s.getElementById(`lri-overlay`),m=s.getElementById(`lri-drag-handle`),h=s.getElementById(`lri-enable-toggle`),g=s.getElementById(`toggle-label`),_=localStorage.getItem(`lri_mod_active`)!==`false`;h.checked=_,_?(f?.classList.add(`open`),p?.classList.add(`visible`),g.textContent=`Active`,f?.classList.remove(`disabled-mode`)):(f?.classList.remove(`open`),p?.classList.remove(`visible`),g.textContent=`Off`,f?.classList.add(`disabled-mode`)),h?.addEventListener(`change`,e=>{let t=e.target.checked;localStorage.setItem(`lri_mod_active`,t),t?(f?.classList.remove(`disabled-mode`),g.textContent=`Active`,f?.classList.add(`open`),p?.classList.add(`visible`)):(f?.classList.add(`disabled-mode`),g.textContent=`Off`,f?.classList.remove(`open`),p?.classList.remove(`visible`))});function v(){h?.checked&&(f?.classList.add(`open`),p?.classList.add(`visible`))}function y(){f?.classList.remove(`open`),p?.classList.remove(`visible`)}d?.addEventListener(`click`,v),p?.addEventListener(`click`,y),m?.addEventListener(`click`,y);let b=s.querySelectorAll(`.drawer-tab`),x=s.querySelectorAll(`.drawer-panel`);b.forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-panel`);b.forEach(e=>e.classList.remove(`active`)),x.forEach(e=>e.classList.remove(`active`)),e.classList.add(`active`),s.getElementById(`panel-`+t)?.classList.add(`active`)})});let S=s.querySelectorAll(`.sanctum-sub-tab`),C=s.querySelectorAll(`.sanctum-sub-panel`);S.forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-sub`);S.forEach(e=>{e.style.background=`#f8fafc`,e.style.border=`1px solid #e2e8f0`}),e.style.background=`#e2e8f0`,e.style.border=`none`,C.forEach(e=>e.style.display=`none`),s.getElementById(`sub-`+t).style.display=`block`})});function w(){let e=document.querySelector(`button[aria-label="Open Sim panel"]`);e&&!e.dataset.lriFramed&&(e.dataset.lriFramed=`true`,e.style.border=`3px solid #d97706`,e.style.boxShadow=`none`,e.style.overflow=`hidden`),document.querySelectorAll(`p`).forEach(e=>{e.textContent.includes(`Traits:`)&&!e.textContent.includes(`LRI Initiate`)&&(e.textContent=e.textContent.trim()+` · LRI Initiate`)})}w(),new MutationObserver(()=>{w()}).observe(document.body,{childList:!0,subtree:!0}),console.info(`[LRI Mod] Modular Political Syndicate Engine Active.`)})();

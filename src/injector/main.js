@@ -127,7 +127,7 @@ import { initLobby } from './modules/lobby.js';
       <img src="${logoUrl}" alt="LRI Logo" />
     </button>
 
-    <div id="lri-drawer" role="dialog" aria-modal="true" class="open">
+    <div id="lri-drawer" role="dialog" aria-modal="true">
       <div class="drawer-handle" id="lri-drag-handle"></div>
 
       <div class="lri-header">
@@ -138,7 +138,7 @@ import { initLobby } from './modules/lobby.js';
         <div class="switch-container">
           <span style="font-size: 11px; color: #64748b; font-weight: 600;" id="toggle-label">Active</span>
           <label class="switch">
-            <input type="checkbox" id="lri-enable-toggle" checked />
+            <input type="checkbox" id="lri-enable-toggle" />
             <span class="slider"></span>
           </label>
         </div>
@@ -240,15 +240,46 @@ import { initLobby } from './modules/lobby.js';
     initElections(shadow, showLriModal);
     initLobby(shadow, showLriModal);
 
-    // UI Navigation & Toggle Handlers
+    // ── Persistent Toggle Switch Handler ──────────────────────
     const fab = shadow.getElementById('lri-fab');
     const drawer = shadow.getElementById('lri-drawer');
     const overlay = shadow.getElementById('lri-overlay');
     const handle = shadow.getElementById('lri-drag-handle');
-    const tabs = shadow.querySelectorAll('.drawer-tab');
-    const panels = shadow.querySelectorAll('.drawer-panel');
     const toggleInput = shadow.getElementById('lri-enable-toggle');
     const toggleLabel = shadow.getElementById('toggle-label');
+
+    // Retrieve saved state (defaults to true if never set)
+    const isInitiallyActive = localStorage.getItem('lri_mod_active') !== 'false';
+    toggleInput.checked = isInitiallyActive;
+
+    if (isInitiallyActive) {
+        drawer?.classList.add('open');
+        overlay?.classList.add('visible');
+        toggleLabel.textContent = "Active";
+        drawer?.classList.remove('disabled-mode');
+    } else {
+        drawer?.classList.remove('open');
+        overlay?.classList.remove('visible');
+        toggleLabel.textContent = "Off";
+        drawer?.classList.add('disabled-mode');
+    }
+
+    toggleInput?.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked;
+        localStorage.setItem('lri_mod_active', isEnabled);
+
+        if (isEnabled) {
+            drawer?.classList.remove('disabled-mode');
+            toggleLabel.textContent = "Active";
+            drawer?.classList.add('open');
+            overlay?.classList.add('visible');
+        } else {
+            drawer?.classList.add('disabled-mode');
+            toggleLabel.textContent = "Off";
+            drawer?.classList.remove('open');
+            overlay?.classList.remove('visible');
+        }
+    });
 
     function openDrawer() { if (toggleInput?.checked) { drawer?.classList.add('open'); overlay?.classList.add('visible'); } }
     function closeDrawer() { drawer?.classList.remove('open'); overlay?.classList.remove('visible'); }
@@ -257,11 +288,8 @@ import { initLobby } from './modules/lobby.js';
     overlay?.addEventListener('click', closeDrawer);
     handle?.addEventListener('click', closeDrawer);
 
-    toggleInput?.addEventListener('change', (e) => {
-        if (e.target.checked) { drawer?.classList.remove('disabled-mode'); toggleLabel.textContent = "Active"; openDrawer(); }
-        else { drawer?.classList.add('disabled-mode'); toggleLabel.textContent = "Off"; closeDrawer(); }
-    });
-
+    const tabs = shadow.querySelectorAll('.drawer-tab');
+    const panels = shadow.querySelectorAll('.drawer-panel');
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const target = tab.getAttribute('data-panel');

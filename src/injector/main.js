@@ -240,7 +240,7 @@ import { initLobby } from './modules/lobby.js';
     initElections(shadow, showLriModal);
     initLobby(shadow, showLriModal);
 
-    // ── Persistent Toggle Switch & FAB Handler ────────────────
+    // ── Persistent Toggle Switch & Smart FAB Handler ──────────
     const fab = shadow.getElementById('lri-fab');
     const drawer = shadow.getElementById('lri-drawer');
     const overlay = shadow.getElementById('lri-overlay');
@@ -270,21 +270,26 @@ import { initLobby } from './modules/lobby.js';
         if (isEnabled) {
             drawer?.classList.remove('disabled-mode');
             toggleLabel.textContent = "Active";
+            drawer?.classList.add('open');
+            overlay?.classList.add('visible');
         } else {
             drawer?.classList.add('disabled-mode');
             toggleLabel.textContent = "Off";
-            // Explicitly force close drawer and hide overlay immediately
             drawer?.classList.remove('open');
             overlay?.classList.remove('visible');
         }
     });
 
-    // FAB click handler checks if mod is enabled before opening
-    function openDrawer() {
-        if (toggleInput?.checked) {
-            drawer?.classList.add('open');
-            overlay?.classList.add('visible');
+    // Smart FAB handler: If clicked while off, it turns it back on and opens!
+    function handleFabClick() {
+        if (!toggleInput.checked) {
+            toggleInput.checked = true;
+            localStorage.setItem('lri_mod_active', 'true');
+            drawer?.classList.remove('disabled-mode');
+            toggleLabel.textContent = "Active";
         }
+        drawer?.classList.add('open');
+        overlay?.classList.add('visible');
     }
 
     function closeDrawer() {
@@ -292,7 +297,7 @@ import { initLobby } from './modules/lobby.js';
         overlay?.classList.remove('visible');
     }
 
-    fab?.addEventListener('click', openDrawer);
+    fab?.addEventListener('click', handleFabClick);
     overlay?.addEventListener('click', closeDrawer);
     handle?.addEventListener('click', closeDrawer);
 

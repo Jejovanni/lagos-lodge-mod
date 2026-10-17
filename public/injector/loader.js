@@ -7,11 +7,8 @@
   if (document.getElementById('lri-mod-root')) return;
 
   const STORAGE_KEY_LICENSE = 'lri_license_key';
-  const STORAGE_KEY_SESSION = 'lri_session_token';
-
   let licenseKey = localStorage.getItem(STORAGE_KEY_LICENSE);
 
-  // FORCE DEV TEST MODE SO IT LOADS INSTANTLY WITHOUT A KEY
   if (!licenseKey) {
     licenseKey = 'TEST-DEV-KEY-1234';
     localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
@@ -27,13 +24,12 @@
 
   const shadow = hostEl.attachShadow({ mode: 'open' });
 
-  // ── Game-Matched Native Aesthetics (Clean, Soft, Vibrant) ──
+  // ── Game-Matched Native Aesthetics ────────────────────────
   const style = document.createElement('style');
   style.textContent = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :host { all: initial; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-    /* LRI Floating Action Button - Positioned safely above the bottom navigation bar */
     #lri-fab {
       position: fixed; bottom: 85px; right: 20px; width: 52px; height: 52px;
       border-radius: 50%; background: #ffffff;
@@ -45,7 +41,6 @@
     #lri-fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
     #lri-fab img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Slide-up Drawer matching game card style */
     #lri-drawer {
       position: fixed; bottom: 0; left: 0; right: 0; max-height: 85vh;
       background: #ffffff; border-top-left-radius: 24px; border-top-right-radius: 24px;
@@ -58,12 +53,10 @@
 
     .drawer-handle { width: 36px; height: 4px; background: #cbd5e1; border-radius: 2px; margin: 12px auto 8px; cursor: pointer; }
 
-    /* Header & Ledger Row */
     .lri-header { padding: 0 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; }
     .lri-title { font-size: 16px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; }
     .lri-logo-thumb { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; }
     
-    /* Toggle Switch Styles */
     .switch-container { display: flex; align-items: center; gap: 8px; }
     .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -78,7 +71,6 @@
     input:checked + .slider { background-color: #10b981; }
     input:checked + .slider:before { transform: translateX(18px); }
 
-    /* Tabs */
     .drawer-tabs { display: flex; background: #f8fafc; padding: 4px; border-bottom: 1px solid #e2e8f0; }
     .drawer-tab {
       flex: 1; padding: 10px; font-size: 12px; font-weight: 600; color: #64748b;
@@ -89,18 +81,12 @@
     .drawer-panel { display: none; flex: 1; overflow-y: auto; padding: 20px; color: #334155; }
     .drawer-panel.active { display: block; }
 
-    /* UI Elements */
     .lri-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
     .btn-primary {
       width: 100%; padding: 12px; background: #10b981; color: #ffffff; border: none;
       border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s;
     }
     .btn-primary:hover { background: #059669; }
-
-    /* Member Ledger List Styles */
-    .ledger-list { max-height: 160px; overflow-y: auto; margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
-    .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-    .ledger-item:last-child { border-bottom: none; }
 
     #lri-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); display: none; z-index: 2147483646; }
     #lri-overlay.visible { display: block; }
@@ -141,25 +127,28 @@
         <button class="drawer-tab" data-panel="petition">Candidate Lobby</button>
       </div>
 
-      <!-- Tab 1: Inner Sanctum -->
+      <!-- Tab 1: Inner Sanctum / Executive Policy Desk -->
       <div class="drawer-panel active" id="panel-sanctum">
-        <div class="lri-card">
-          <div style="font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase;">Research Rank</div>
-          <div style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 4px 0;">Senior Research Fellow</div>
-          <div style="font-size: 13px; color: #10b981; font-weight: 500;">1,250 Contribution Points</div>
+        <div class="lri-card" style="border-left: 4px solid #d97706; background: #fffbeb;">
+          <div style="font-size: 11px; color: #b45309; font-weight: 700; text-transform: uppercase;">Syndicate Executive Authority</div>
+          <div style="font-size: 16px; font-weight: 700; color: #78350f; margin: 4px 0;">👑 Reigned by Grand Director</div>
+          <div style="font-size: 12px; color: #92400e; font-weight: 500;">Kingmaker Election Syndicate</div>
         </div>
 
         <div class="lri-card">
-          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">👥 Active Fellows Ledger</div>
-          <div style="font-size: 12px; color: #64748b; margin-bottom: 8px;">Live syndicate member clearance tracking.</div>
-          <div class="ledger-list" id="lri-ledger-container">
-            <!-- Dynamically populated rows -->
+          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">📋 Active Policy Directives (APDs)</div>
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Official marching orders issued by the reigning Grand Director.</div>
+          
+          <div id="directives-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: #334155; min-height: 60px;">
+            Synchronizing directives...
           </div>
-        </div>
 
-        <div class="lri-card">
-          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">📊 Active Policy Directives</div>
-          <div style="font-size: 13px; color: #475569;">• Audit polling district 001 data flow.<br>• Coordinate regional economic research.</div>
+          <!-- Grand Director Exclusive Publishing Desk -->
+          <div id="director-desk" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 12px; margin-top: 8px;">
+            <div style="font-size: 12px; font-weight: 700; color: #d97706; margin-bottom: 6px;">👑 Grand Director Control Panel</div>
+            <input type="text" id="new-directive-input" placeholder="Broadcast a new policy directive..." style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; font-size: 13px; margin-bottom: 8px;" />
+            <button class="btn-primary" id="btn-publish-directive" style="padding: 10px; font-size: 13px;">Issue Directive to Syndicate</button>
+          </div>
         </div>
       </div>
 
@@ -167,7 +156,7 @@
       <div class="drawer-panel" id="panel-elections">
         <div class="lri-card" style="border-color: #10b981; background: #f0fdf4;">
           <div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 4px;">🗳️ Grand Director Ballot</div>
-          <div style="font-size: 12px; color: #15803d; margin-bottom: 12px;">Weekly leadership election ends in 2 days. Cast your vote wisely.</div>
+          <div style="font-size: 12px; color: #15803d; margin-bottom: 12px;">Weekly leadership election ends soon. Cast your vote to steer the syndicate.</div>
           <button class="btn-primary" id="btn-vote-director">Vote for Syndicate Lead</button>
         </div>
       </div>
@@ -176,7 +165,7 @@
       <div class="drawer-panel" id="panel-petition">
         <div class="lri-card">
           <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">🤝 Political Lobbying Portal</div>
-          <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Candidates running for public office may submit their platform for official LRI research endorsement.</div>
+          <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Candidates running for public office may submit their platform for official LRI endorsement.</div>
           <input type="text" placeholder="Candidate In-Game Handle" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:8px; width:100%; font-size:13px;" id="lobby-handle" />
           <textarea placeholder="Outline your political platform..." style="padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:12px; width:100%; height:80px; font-size:13px;" id="lobby-platform"></textarea>
           <button class="btn-primary" id="btn-submit-lobby">Submit Platform for Review</button>
@@ -193,51 +182,71 @@
     };
   }
 
-  // ── Populate Live Member Ledger from Supabase ─────────────
-  async function fetchAndRenderFellows() {
-    const ledgerEl = shadow.getElementById('lri-ledger-container');
-    if (!ledgerEl) return;
-
-    ledgerEl.innerHTML = `<div style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;">Synchronizing syndicate ledger...</div>`;
+  // ── Fetch & Render Active Policy Directives ──────────────
+  async function fetchDirectives() {
+    const container = shadow.getElementById('directives-container');
+    if (!container) return;
 
     try {
       const config = getSupabaseConfig();
-      const response = await fetch(`${config.url}/rest/v1/lri_members?select=*&order=contribution_points.desc`, {
-        headers: {
-          'apikey': config.key,
-          'Authorization': `Bearer ${config.key}`
-        }
+      const res = await fetch(`${config.url}/rest/v1/lri_directives?select=*&order=created_at.desc`, {
+        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
       });
+      const directives = await res.json();
 
-      if (!response.ok) throw new Error('Failed to fetch syndicate records');
-
-      const members = await response.json();
-
-      if (members.length === 0) {
-        ledgerEl.innerHTML = `<div style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;">No active fellows found in ledger.</div>`;
+      if (!directives || directives.length === 0) {
+        container.innerHTML = `<div style="color: #64748b; font-style: italic;">No active directives issued yet.</div>`;
         return;
       }
 
-      ledgerEl.innerHTML = members.map(m => `
-        <div class="ledger-item">
-          <div><strong>${m.in_game_handle}</strong> <span style="color: #64748b; font-size: 11px; margin-left: 4px;">(${m.research_rank})</span></div>
-          <div style="color: #10b981; font-weight: 600; font-size: 12px;">${(m.contribution_points || 0).toLocaleString()} pts</div>
+      container.innerHTML = directives.map(d => `
+        <div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+          • ${d.directive_text} <span style="font-size: 11px; color: #94a3b8; display: block; margin-top: 2px;">Issued by ${d.author_handle}</span>
         </div>
       `).join('');
 
-      const countBadge = shadow.getElementById('member-count-badge');
-      if (countBadge) {
-        countBadge.textContent = `${members.length} Active Fellows`;
-      }
-
     } catch (err) {
-      console.error('[LRI Mod] Supabase fetch error:', err);
-      ledgerEl.innerHTML = `<div style="padding: 12px; text-align: center; color: #ef4444; font-size: 13px;">Error loading live ledger. Check connection.</div>`;
+      container.innerHTML = `<div style="color: #ef4444;">Failed to load directives.</div>`;
     }
   }
 
-  // Trigger the fetch when the extension UI mounts
-  fetchAndRenderFellows();
+  fetchDirectives();
+
+  // Grand Director permission toggle check (mock handle check or storage flag)
+  const userHandle = localStorage.getItem('lri_user_handle') || 'Director Adebayo';
+  if (userHandle.includes('Director')) {
+    const desk = shadow.getElementById('director-desk');
+    if (desk) desk.style.display = 'block';
+  }
+
+  // Publish Directive Handler
+  shadow.getElementById('btn-publish-directive')?.addEventListener('click', async () => {
+    const input = shadow.getElementById('new-directive-input');
+    const text = input?.value.trim();
+    if (!text) return alert('Directive text cannot be empty.');
+
+    try {
+      const config = getSupabaseConfig();
+      const res = await fetch(`${config.url}/rest/v1/lri_directives`, {
+        method: 'POST',
+        headers: {
+          'apikey': config.key,
+          'Authorization': `Bearer ${config.key}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ directive_text: text, author_handle: userHandle })
+      });
+
+      if (!res.ok) throw new Error('Failed to publish');
+
+      alert('New Policy Directive broadcasted successfully across the LRI network!');
+      input.value = '';
+      fetchDirectives();
+    } catch (err) {
+      alert('Error broadcasting directive.');
+    }
+  });
 
   // ── UI Interactivity Handlers ─────────────────────────────
   const fab = shadow.getElementById('lri-fab');
@@ -261,7 +270,6 @@
   overlay?.addEventListener('click', closeDrawer);
   handle?.addEventListener('click', closeDrawer);
 
-  // Toggle Extension On/Off
   toggleInput?.addEventListener('change', (e) => {
     const isEnabled = e.target.checked;
     if (isEnabled) {
@@ -289,7 +297,6 @@
   shadow.getElementById('btn-submit-lobby')?.addEventListener('click', async () => {
     const handleInput = shadow.getElementById('lobby-handle');
     const platformInput = shadow.getElementById('lobby-platform');
-
     const handle = handleInput?.value.trim();
     const platform = platformInput?.value.trim();
 
@@ -304,7 +311,7 @@
 
     try {
       const config = getSupabaseConfig();
-      const response = await fetch(`${config.url}/rest/v1/lri_ballots_and_lobbies`, {
+      const res = await fetch(`${config.url}/rest/v1/lri_ballots_and_lobbies`, {
         method: 'POST',
         headers: {
           'apikey': config.key,
@@ -312,30 +319,22 @@
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({
-          type: 'lobby_petition',
-          candidate_handle: handle,
-          platform_text: platform,
-          votes_count: 0
-        })
+        body: JSON.stringify({ type: 'lobby_petition', candidate_handle: handle, platform_text: platform, votes_count: 0 })
       });
 
-      if (!response.ok) throw new Error('Submission failed');
-
-      alert('Platform successfully submitted to the Lagos Research Initiative board for review!');
+      if (!res.ok) throw new Error('Submission failed');
+      alert('Platform successfully submitted to the LRI board for review!');
       handleInput.value = '';
       platformInput.value = '';
-
     } catch (err) {
-      console.error('[LRI Mod] Lobby submission error:', err);
-      alert('Failed to submit platform. Please check your connection.');
+      alert('Failed to submit platform.');
     } finally {
       submitBtn.textContent = 'Submit Platform for Review';
       submitBtn.disabled = false;
     }
   });
 
-  // ── Weekly Elections Vote Handler ─────────────────────────
+  // Weekly Elections Vote Handler
   shadow.getElementById('btn-vote-director')?.addEventListener('click', async () => {
     const voteBtn = shadow.getElementById('btn-vote-director');
     voteBtn.textContent = 'Casting Ballot...';
@@ -343,7 +342,7 @@
 
     try {
       const config = getSupabaseConfig();
-      const response = await fetch(`${config.url}/rest/v1/lri_ballots_and_lobbies`, {
+      const res = await fetch(`${config.url}/rest/v1/lri_ballots_and_lobbies`, {
         method: 'POST',
         headers: {
           'apikey': config.key,
@@ -351,22 +350,14 @@
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({
-          type: 'election',
-          candidate_handle: 'Director Adebayo',
-          platform_text: 'Syndicate Leadership Ballot',
-          votes_count: 1
-        })
+        body: JSON.stringify({ type: 'election', candidate_handle: 'Director Adebayo', platform_text: 'Syndicate Leadership Ballot', votes_count: 1 })
       });
 
-      if (!response.ok) throw new Error('Vote casting failed');
-
+      if (!res.ok) throw new Error('Vote failed');
       alert('Your vote has been securely recorded on the LRI network ledger!');
       voteBtn.textContent = 'Ballot Cast Successfully';
-
     } catch (err) {
-      console.error('[LRI Mod] Vote error:', err);
-      alert('Could not cast vote. Please try again.');
+      alert('Could not cast vote.');
       voteBtn.textContent = 'Vote for Syndicate Lead';
       voteBtn.disabled = false;
     }
@@ -374,16 +365,16 @@
 
   // ── Custom LRI Profile Frame & Traits Injector ────────────
   function applyLRIModifications() {
-    // 1. Solid Gold Profile Frame (No green rings)
+    // 1. Solid Gold Profile Frame (Strictly solid gold, no green)
     const profileButton = document.querySelector('button[aria-label="Open Sim panel"]');
     if (profileButton && !profileButton.dataset.lriFramed) {
       profileButton.dataset.lriFramed = "true";
-      profileButton.style.border = "3px solid #d97706"; // Clean Rich Gold
+      profileButton.style.border = "3px solid #d97706";
       profileButton.style.boxShadow = "none";
       profileButton.style.overflow = "hidden";
     }
 
-    // 2. Inject "LRI Initiate" into the Traits section at the bottom of the drawer
+    // 2. Inject "LRI Initiate" into the Traits section at the bottom of the profile drawer
     const traitParagraphs = document.querySelectorAll('p');
     traitParagraphs.forEach(p => {
       if (p.textContent.includes('Traits:') && !p.textContent.includes('LRI Initiate')) {
@@ -392,11 +383,9 @@
     });
   }
 
-  // Run on mount and observe for dynamic page changes
   applyLRIModifications();
-  const lriObserver = new MutationObserver(() => {
-    applyLRIModifications();
-  });
+  const lriObserver = new MutationObserver(() => { applyLRIModifications(); });
   lriObserver.observe(document.body, { childList: true, subtree: true });
-  console.info('[LRI Mod] Initialized with Toggle Switch, Supabase Ledger, and Custom Profile Frame.');
+
+  console.info('[LRI Mod] Initialized as a Political Syndicate Engine.');
 })();

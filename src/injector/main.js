@@ -240,7 +240,7 @@ import { initLobby } from './modules/lobby.js';
     initElections(shadow, showLriModal);
     initLobby(shadow, showLriModal);
 
-    // ── Persistent Toggle Switch Handler ──────────────────────
+    // ── Persistent Toggle Switch & FAB Handler ────────────────
     const fab = shadow.getElementById('lri-fab');
     const drawer = shadow.getElementById('lri-drawer');
     const overlay = shadow.getElementById('lri-overlay');
@@ -248,22 +248,19 @@ import { initLobby } from './modules/lobby.js';
     const toggleInput = shadow.getElementById('lri-enable-toggle');
     const toggleLabel = shadow.getElementById('toggle-label');
 
-    // Retrieve saved state (defaults to true if never set)
+    // Retrieve saved state (defaults to true)
     const isInitiallyActive = localStorage.getItem('lri_mod_active') !== 'false';
     toggleInput.checked = isInitiallyActive;
 
     if (isInitiallyActive) {
-        drawer?.classList.add('open');
-        overlay?.classList.add('visible');
-        toggleLabel.textContent = "Active";
         drawer?.classList.remove('disabled-mode');
+        toggleLabel.textContent = "Active";
     } else {
-        drawer?.classList.remove('open');
-        overlay?.classList.remove('visible');
-        toggleLabel.textContent = "Off";
         drawer?.classList.add('disabled-mode');
+        toggleLabel.textContent = "Off";
     }
 
+    // Toggle switch change listener
     toggleInput?.addEventListener('change', (e) => {
         const isEnabled = e.target.checked;
         localStorage.setItem('lri_mod_active', isEnabled);
@@ -281,8 +278,18 @@ import { initLobby } from './modules/lobby.js';
         }
     });
 
-    function openDrawer() { if (toggleInput?.checked) { drawer?.classList.add('open'); overlay?.classList.add('visible'); } }
-    function closeDrawer() { drawer?.classList.remove('open'); overlay?.classList.remove('visible'); }
+    // FAB click handler checks if mod is enabled before opening
+    function openDrawer() {
+        if (toggleInput?.checked) {
+            drawer?.classList.add('open');
+            overlay?.classList.add('visible');
+        }
+    }
+
+    function closeDrawer() {
+        drawer?.classList.remove('open');
+        overlay?.classList.remove('visible');
+    }
 
     fab?.addEventListener('click', openDrawer);
     overlay?.addEventListener('click', closeDrawer);

@@ -374,16 +374,16 @@
 
   // ── Custom LRI Profile Frame Injector ─────────────────────
   function applyCustomProfileFrame() {
-    // Target the game's actual profile button element using its aria-label
+    // Target the game's actual profile button element
     const profileButton = document.querySelector('button[aria-label="Open Sim panel"]');
 
     if (profileButton && !profileButton.dataset.lriFramed) {
       profileButton.dataset.lriFramed = "true";
 
-      // Apply custom glowing LRI gold and emerald frame styling directly to the profile container
-      profileButton.style.border = "3px solid #10b981";
-      profileButton.style.boxShadow = "0 0 14px rgba(16, 185, 129, 0.8), 0 0 0 3px #f59e0b";
-      profileButton.style.overflow = "visible"; // ensures the glow frame doesn't get clipped
+      // Apply clean, solid gold styling frame (no extra rings/shadows)
+      profileButton.style.border = "3px solid #d97706"; // Rich Syndicate Gold
+      profileButton.style.boxShadow = "none";
+      profileButton.style.overflow = "hidden";
     }
   }
 

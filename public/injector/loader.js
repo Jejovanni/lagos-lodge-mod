@@ -374,26 +374,24 @@
 
   // ── Custom LRI Profile Frame Injector ─────────────────────
   function applyCustomProfileFrame() {
-    // Target the game's native profile avatar containers on the main DOM
-    const profileAvatars = document.querySelectorAll('img[alt*="avatar"], .avatar-profile, div[class*="profile"]');
+    // Target the game's actual profile button element using its aria-label
+    const profileButton = document.querySelector('button[aria-label="Open Sim panel"]');
 
-    profileAvatars.forEach(avatarNode => {
-      if (avatarNode.dataset.lriFramed) return;
-      avatarNode.dataset.lriFramed = "true";
+    if (profileButton && !profileButton.dataset.lriFramed) {
+      profileButton.dataset.lriFramed = "true";
 
-      // Apply custom LRI gold and emerald frame styling
-      avatarNode.style.border = "3px solid #10b981";
-      avatarNode.style.boxShadow = "0 0 12px rgba(16, 185, 129, 0.7), 0 0 0 2px #f59e0b";
-      avatarNode.style.borderRadius = "50%";
-    });
+      // Apply custom glowing LRI gold and emerald frame styling directly to the profile container
+      profileButton.style.border = "3px solid #10b981";
+      profileButton.style.boxShadow = "0 0 14px rgba(16, 185, 129, 0.8), 0 0 0 3px #f59e0b";
+      profileButton.style.overflow = "visible"; // ensures the glow frame doesn't get clipped
+    }
   }
 
-  // Run on mount and observe for page/avatar updates
+  // Run on mount and observe for page updates
   applyCustomProfileFrame();
   const profileObserver = new MutationObserver(() => {
     applyCustomProfileFrame();
   });
   profileObserver.observe(document.body, { childList: true, subtree: true });
-
   console.info('[LRI Mod] Initialized with Toggle Switch, Supabase Ledger, and Custom Profile Frame.');
 })();

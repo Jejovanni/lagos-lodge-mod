@@ -372,5 +372,28 @@
     }
   });
 
-  console.info('[LRI Mod] Initialized with Toggle Switch and Member Ledger.');
+  // ── Custom LRI Profile Frame Injector ─────────────────────
+  function applyCustomProfileFrame() {
+    // Target the game's native profile avatar containers on the main DOM
+    const profileAvatars = document.querySelectorAll('img[alt*="avatar"], .avatar-profile, div[class*="profile"]');
+
+    profileAvatars.forEach(avatarNode => {
+      if (avatarNode.dataset.lriFramed) return;
+      avatarNode.dataset.lriFramed = "true";
+
+      // Apply custom LRI gold and emerald frame styling
+      avatarNode.style.border = "3px solid #10b981";
+      avatarNode.style.boxShadow = "0 0 12px rgba(16, 185, 129, 0.7), 0 0 0 2px #f59e0b";
+      avatarNode.style.borderRadius = "50%";
+    });
+  }
+
+  // Run on mount and observe for page/avatar updates
+  applyCustomProfileFrame();
+  const profileObserver = new MutationObserver(() => {
+    applyCustomProfileFrame();
+  });
+  profileObserver.observe(document.body, { childList: true, subtree: true });
+
+  console.info('[LRI Mod] Initialized with Toggle Switch, Supabase Ledger, and Custom Profile Frame.');
 })();

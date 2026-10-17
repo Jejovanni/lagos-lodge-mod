@@ -186,13 +186,55 @@
   `;
 
   // ── Populate Member Ledger Data ───────────────────────────
-  const members = [
-    { name: "Director Adebayo", rank: "Grand Director", pts: "4,820 pts" },
-    { name: "Dr. Chioma Okoro", rank: "Senior Fellow", pts: "3,150 pts" },
-    { name: "Operative_99", rank: "Research Fellow", pts: "1,890 pts" },
-    { name: "Tunde_Lagos", rank: "Junior Analyst", pts: "940 pts" },
-    { name: "Eko_Mind", rank: "Junior Analyst", pts: "720 pts" }
-  ];
+  // Function to fetch live fellows from Supabase
+  async function fetchAndRenderFellows() {
+    const ledgerEl = shadow.getElementById('lri-ledger-container');
+    if (!ledgerEl) return;
+
+    ledgerEl.innerHTML = `<div style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;">Synchronizing syndicate ledger...</div>`;
+
+    try {
+      // Replace with your actual Supabase project URL and public anon key
+      const SUPABASE_URL = 'https://vpxeascdekapififamic.supabase.co/rest/v1/';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweGVhc2NkZWthcGlmaWZhbWljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDQ3MTUsImV4cCI6MjEwNzM4MDcxNX0.Y1-x-RjX4L321prAKzXCSoqQEIL2wH5Zi5oUX_wtFhI';
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/lri_members?select=*&order=contribution_points.desc`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch syndicate records');
+
+      const members = await response.json();
+
+      if (members.length === 0) {
+        ledgerEl.innerHTML = `<div style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;">No active fellows found in ledger.</div>`;
+        return;
+      }
+
+      ledgerEl.innerHTML = members.map(m => `
+      <div class="ledger-item">
+        <div><strong>${m.in_game_handle}</strong> <span style="color: #64748b; font-size: 11px; margin-left: 4px;">(${m.research_rank})</span></div>
+        <div style="color: #10b981; font-weight: 600; font-size: 12px;">${m.contribution_points.toLocaleString()} pts</div>
+      </div>
+    `).join('');
+
+      // Optionally update the active member count badge in the header if it exists
+      const countBadge = shadow.getElementById('member-count-badge');
+      if (countBadge) {
+        countBadge.textContent = `${members.length} Active Fellows`;
+      }
+
+    } catch (err) {
+      console.error('[LRI Mod] Supabase fetch error:', err);
+      ledgerEl.innerHTML = `<div style="padding: 12px; text-align: center; color: #ef4444; font-size: 13px;">Error loading live ledger. Check connection.</div>`;
+    }
+  }
+
+  // Trigger the fetch when the extension UI mounts
+  fetchAndRenderFellows();
 
   const ledgerEl = shadow.getElementById('lri-ledger-container');
   if (ledgerEl) {
@@ -250,8 +292,95 @@
     });
   });
 
-  shadow.getElementById('btn-submit-lobby')?.addEventListener('click', () => {
-    alert('Platform submitted to the Lagos Research Initiative board for review.');
+  // Candidate Lobby Submission Handler
+  shadow.getElementById('btn-submit-lobby')?.addEventListener('click', async () => {
+    const handleInput = shadow.getElementById('lobby-handle');
+    const platformInput = shadow.getElementById('lobby-platform');
+
+    const handle = handleInput?.value.trim();
+    const platform = platformInput?.value.trim();
+
+    if (!handle || !platform) {
+      alert('Please provide both your in-game handle and your political platform.');
+      return;
+    }
+
+    const submitBtn = shadow.getElementById('btn-submit-lobby');
+    submitBtn.textContent = 'Submitting to Board...';
+    submitBtn.disabled = true;
+
+    try {
+      const SUPABASE_URL = 'https://your-project-id.supabase.co';
+      const SUPABASE_ANON_KEY = 'your-supabase-anon-key';
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/lri_ballots_and_lobbies`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          type: 'lobby_petition',
+          candidate_handle: handle,
+          platform_text: platform,
+          votes_count: 0
+        })
+      });
+
+      if (!response.ok) throw new Error('Submission failed');
+
+      alert('Platform successfully submitted to the Lagos Research Initiative board for review!');
+      handleInput.value = '';
+      platformInput.value = '';
+
+    } catch (err) {
+      console.error('[LRI Mod] Lobby submission error:', err);
+      alert('Failed to submit platform. Please check your connection.');
+    } finally {
+      submitBtn.textContent = 'Submit Platform for Review';
+      submitBtn.disabled = false;
+    }
+  });
+
+  // ── Weekly Elections Vote Handler (Second Snippet) ────────
+  shadow.getElementById('btn-vote-director')?.addEventListener('click', async () => {
+    const voteBtn = shadow.getElementById('btn-vote-director');
+    voteBtn.textContent = 'Casting Ballot...';
+    voteBtn.disabled = true;
+
+    try {
+      const SUPABASE_URL = 'https://your-project-id.supabase.co';
+      const SUPABASE_ANON_KEY = 'your-supabase-anon-key';
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/lri_ballots_and_lobbies`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          type: 'election',
+          candidate_handle: 'Director Adebayo',
+          platform_text: 'Syndicate Leadership Ballot',
+          votes_count: 1
+        })
+      });
+
+      if (!response.ok) throw new Error('Vote casting failed');
+
+      alert('Your vote has been securely recorded on the LRI network ledger!');
+      voteBtn.textContent = 'Ballot Cast Successfully';
+
+    } catch (err) {
+      console.error('[LRI Mod] Vote error:', err);
+      alert('Could not cast vote. Please try again.');
+      voteBtn.textContent = 'Vote for Syndicate Lead';
+      voteBtn.disabled = false;
+    }
   });
 
   console.info('[LRI Mod] Initialized with Toggle Switch and Member Ledger.');

@@ -258,6 +258,8 @@ import { initLobby } from './modules/lobby.js';
     } else {
         drawer?.classList.add('disabled-mode');
         toggleLabel.textContent = "Off";
+        drawer?.classList.remove('open');
+        overlay?.classList.remove('visible');
     }
 
     // Toggle switch change listener
@@ -268,11 +270,10 @@ import { initLobby } from './modules/lobby.js';
         if (isEnabled) {
             drawer?.classList.remove('disabled-mode');
             toggleLabel.textContent = "Active";
-            drawer?.classList.add('open');
-            overlay?.classList.add('visible');
         } else {
             drawer?.classList.add('disabled-mode');
             toggleLabel.textContent = "Off";
+            // Explicitly force close drawer and hide overlay immediately
             drawer?.classList.remove('open');
             overlay?.classList.remove('visible');
         }

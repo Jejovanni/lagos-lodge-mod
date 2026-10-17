@@ -372,26 +372,31 @@
     }
   });
 
-  // ── Custom LRI Profile Frame Injector ─────────────────────
-  function applyCustomProfileFrame() {
-    // Target the game's actual profile button element
+  // ── Custom LRI Profile Frame & Traits Injector ────────────
+  function applyLRIModifications() {
+    // 1. Solid Gold Profile Frame (No green rings)
     const profileButton = document.querySelector('button[aria-label="Open Sim panel"]');
-
     if (profileButton && !profileButton.dataset.lriFramed) {
       profileButton.dataset.lriFramed = "true";
-
-      // Apply clean, solid gold styling frame (no extra rings/shadows)
-      profileButton.style.border = "3px solid #d97706"; // Rich Syndicate Gold
+      profileButton.style.border = "3px solid #d97706"; // Clean Rich Gold
       profileButton.style.boxShadow = "none";
       profileButton.style.overflow = "hidden";
     }
+
+    // 2. Inject "LRI Initiate" into the Traits section at the bottom of the drawer
+    const traitParagraphs = document.querySelectorAll('p');
+    traitParagraphs.forEach(p => {
+      if (p.textContent.includes('Traits:') && !p.textContent.includes('LRI Initiate')) {
+        p.textContent = p.textContent.trim() + ' · LRI Initiate';
+      }
+    });
   }
 
-  // Run on mount and observe for page updates
-  applyCustomProfileFrame();
-  const profileObserver = new MutationObserver(() => {
-    applyCustomProfileFrame();
+  // Run on mount and observe for dynamic page changes
+  applyLRIModifications();
+  const lriObserver = new MutationObserver(() => {
+    applyLRIModifications();
   });
-  profileObserver.observe(document.body, { childList: true, subtree: true });
+  lriObserver.observe(document.body, { childList: true, subtree: true });
   console.info('[LRI Mod] Initialized with Toggle Switch, Supabase Ledger, and Custom Profile Frame.');
 })();

@@ -127,27 +127,47 @@
         <button class="drawer-tab" data-panel="petition">Candidate Lobby</button>
       </div>
 
-      <!-- Tab 1: Inner Sanctum / Executive Policy Desk -->
+      <!-- Tab 1: Inner Sanctum -->
       <div class="drawer-panel active" id="panel-sanctum">
-        <div class="lri-card" style="border-left: 4px solid #d97706; background: #fffbeb;">
-          <div style="font-size: 11px; color: #b45309; font-weight: 700; text-transform: uppercase;">Syndicate Executive Authority</div>
-          <div style="font-size: 16px; font-weight: 700; color: #78350f; margin: 4px 0;">👑 Reigned by Grand Director</div>
-          <div style="font-size: 12px; color: #92400e; font-weight: 500;">Kingmaker Election Syndicate</div>
+        <!-- Sub-tabs for Inner Sanctum -->
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button class="sanctum-sub-tab active" data-sub="board" style="flex: 1; padding: 6px; font-size: 11px; font-weight: 600; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Policy Board</button>
+          <button class="sanctum-sub-tab" data-sub="fellows" style="flex: 1; padding: 6px; font-size: 11px; font-weight: 600; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer;">Fellows Roster</button>
         </div>
 
-        <div class="lri-card">
-          <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">📋 Active Policy Directives (APDs)</div>
-          <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Official marching orders issued by the reigning Grand Director.</div>
-          
-          <div id="directives-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: #334155; min-height: 60px;">
-            Synchronizing directives...
+        <!-- Sub-Panel A: Policy Board -->
+        <div class="sanctum-sub-panel active" id="sub-board">
+          <div class="lri-card" style="border-left: 4px solid #d97706; background: #fffbeb;">
+            <div style="font-size: 11px; color: #b45309; font-weight: 700; text-transform: uppercase;">Syndicate Executive Authority</div>
+            <div style="font-size: 16px; font-weight: 700; color: #78350f; margin: 4px 0;">👑 Reigned by Grand Director</div>
+            <div style="font-size: 12px; color: #92400e; font-weight: 500;">Kingmaker Election Syndicate</div>
           </div>
 
-          <!-- Grand Director Exclusive Publishing Desk -->
-          <div id="director-desk" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 12px; margin-top: 8px;">
-            <div style="font-size: 12px; font-weight: 700; color: #d97706; margin-bottom: 6px;">👑 Grand Director Control Panel</div>
-            <input type="text" id="new-directive-input" placeholder="Broadcast a new policy directive..." style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; font-size: 13px; margin-bottom: 8px;" />
-            <button class="btn-primary" id="btn-publish-directive" style="padding: 10px; font-size: 13px;">Issue Directive to Syndicate</button>
+          <div class="lri-card">
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">📋 Active Policy Directives (APDs)</div>
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Official marching orders issued by the reigning Grand Director.</div>
+            
+            <div id="directives-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: #334155; min-height: 60px;">
+              Synchronizing directives...
+            </div>
+
+            <!-- Grand Director Control Panel -->
+            <div id="director-desk" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 12px; margin-top: 8px;">
+              <div style="font-size: 12px; font-weight: 700; color: #d97706; margin-bottom: 6px;">👑 Grand Director Control Panel</div>
+              <input type="text" id="new-directive-input" placeholder="Broadcast a new policy directive..." style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; font-size: 13px; margin-bottom: 8px;" />
+              <button class="btn-primary" id="btn-publish-directive" style="padding: 10px; font-size: 13px;">Issue Directive to Syndicate</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Panel B: Fellows Roster -->
+        <div class="sanctum-sub-panel" id="sub-fellows" style="display: none;">
+          <div class="lri-card">
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">👥 Syndicate Fellows Roster</div>
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Active members operating within the LRI network.</div>
+            <div id="fellows-roster-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; max-height: 250px; overflow-y: auto;">
+              Loading fellows list...
+            </div>
           </div>
         </div>
       </div>
@@ -246,6 +266,54 @@
     } catch (err) {
       alert('Error broadcasting directive.');
     }
+  });
+
+  // ── Fetch & Render Fellows Roster ─────────────────────────
+  async function fetchAndRenderFellowsRoster() {
+    const container = shadow.getElementById('fellows-roster-container');
+    if (!container) return;
+
+    try {
+      const config = getSupabaseConfig();
+      const res = await fetch(`${config.url}/rest/v1/lri_members?select=in_game_handle`, {
+        headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
+      });
+      const members = await res.json();
+
+      if (!members || members.length === 0) {
+        container.innerHTML = `<div style="color: #64748b; font-style: italic;">No active fellows registered.</div>`;
+        return;
+      }
+
+      container.innerHTML = members.map(m => `
+        <div style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
+          <strong>${m.in_game_handle}</strong>
+          <span style="font-size: 10px; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Active Initiate</span>
+        </div>
+      `).join('');
+    } catch (err) {
+      container.innerHTML = `<div style="color: #ef4444;">Failed to load roster.</div>`;
+    }
+  }
+
+  fetchAndRenderFellowsRoster();
+
+  // Sub-Tab Switcher Logic inside Inner Sanctum
+  const subTabs = shadow.querySelectorAll('.sanctum-sub-tab');
+  const subPanels = shadow.querySelectorAll('.sanctum-sub-panel');
+  subTabs.forEach(st => {
+    st.addEventListener('click', () => {
+      const target = st.getAttribute('data-sub');
+      subTabs.forEach(t => {
+        t.style.background = '#f8fafc';
+        t.style.border = '1px solid #e2e8f0';
+      });
+      st.style.background = '#e2e8f0';
+      st.style.border = 'none';
+
+      subPanels.forEach(p => p.style.display = 'none');
+      shadow.getElementById('sub-' + target).style.display = 'block';
+    });
   });
 
   // ── UI Interactivity Handlers ─────────────────────────────

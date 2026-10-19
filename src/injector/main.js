@@ -4,29 +4,21 @@ import { initElections } from './modules/elections.js';
 import { initLobby } from './modules/lobby.js';
 
 (async function LagosLRIMod() {
-    'use strict';
+  'use strict';
 
-    if (document.getElementById('lri-mod-root')) return;
+  if (document.getElementById('lri-mod-root')) return;
 
-    const STORAGE_KEY_LICENSE = 'lri_license_key';
-    let licenseKey = localStorage.getItem(STORAGE_KEY_LICENSE);
+  const hostEl = document.createElement('div');
+  hostEl.id = 'lri-mod-root';
+  Object.assign(hostEl.style, {
+    position: 'fixed', bottom: '0', right: '0', width: '0', height: '0', zIndex: '2147483647', pointerEvents: 'none',
+  });
+  document.body.appendChild(hostEl);
 
-    if (!licenseKey) {
-        licenseKey = 'TEST-DEV-KEY-1234';
-        localStorage.setItem(STORAGE_KEY_LICENSE, licenseKey);
-    }
+  const shadow = hostEl.attachShadow({ mode: 'open' });
 
-    const hostEl = document.createElement('div');
-    hostEl.id = 'lri-mod-root';
-    Object.assign(hostEl.style, {
-        position: 'fixed', bottom: '0', right: '0', width: '0', height: '0', zIndex: '2147483647', pointerEvents: 'none',
-    });
-    document.body.appendChild(hostEl);
-
-    const shadow = hostEl.attachShadow({ mode: 'open' });
-
-    const style = document.createElement('style');
-    style.textContent = `
+  const style = document.createElement('style');
+  style.textContent = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :host { all: initial; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
@@ -106,11 +98,11 @@ import { initLobby } from './modules/lobby.js';
     #lri-overlay.visible { display: block; }
   `;
 
-    const logoUrl = typeof chrome !== 'undefined' && chrome.runtime?.getURL
-        ? chrome.runtime.getURL('lri-logo.jpg')
-        : '/lri-logo.jpg';
+  const logoUrl = typeof chrome !== 'undefined' && chrome.runtime?.getURL
+    ? chrome.runtime.getURL('lri-logo.jpg')
+    : '/lri-logo.jpg';
 
-    shadow.innerHTML = `
+  shadow.innerHTML = `
     <style>${style.textContent}</style>
     <div id="lri-overlay"></div>
 
@@ -234,118 +226,118 @@ import { initLobby } from './modules/lobby.js';
     </div>
   `;
 
-    // Initialize Modules
-    const showLriModal = initModalSystem(shadow);
-    initSanctum(shadow, showLriModal);
-    initElections(shadow, showLriModal);
-    initLobby(shadow, showLriModal);
+  // Initialize Modules
+  const showLriModal = initModalSystem(shadow);
+  initSanctum(shadow, showLriModal);
+  initElections(shadow, showLriModal);
+  initLobby(shadow, showLriModal);
 
-    // ── Persistent Toggle Switch & Smart FAB Handler ──────────
-    const fab = shadow.getElementById('lri-fab');
-    const drawer = shadow.getElementById('lri-drawer');
-    const overlay = shadow.getElementById('lri-overlay');
-    const handle = shadow.getElementById('lri-drag-handle');
-    const toggleInput = shadow.getElementById('lri-enable-toggle');
-    const toggleLabel = shadow.getElementById('toggle-label');
+  // ── Persistent Toggle Switch & Smart FAB Handler ──────────
+  const fab = shadow.getElementById('lri-fab');
+  const drawer = shadow.getElementById('lri-drawer');
+  const overlay = shadow.getElementById('lri-overlay');
+  const handle = shadow.getElementById('lri-drag-handle');
+  const toggleInput = shadow.getElementById('lri-enable-toggle');
+  const toggleLabel = shadow.getElementById('toggle-label');
 
-    // Retrieve saved state (defaults to true)
-    const isInitiallyActive = localStorage.getItem('lri_mod_active') !== 'false';
-    toggleInput.checked = isInitiallyActive;
+  // Retrieve saved state (defaults to true)
+  const isInitiallyActive = localStorage.getItem('lri_mod_active') !== 'false';
+  toggleInput.checked = isInitiallyActive;
 
-    if (isInitiallyActive) {
-        drawer?.classList.remove('disabled-mode');
-        toggleLabel.textContent = "Active";
+  if (isInitiallyActive) {
+    drawer?.classList.remove('disabled-mode');
+    toggleLabel.textContent = "Active";
+  } else {
+    drawer?.classList.add('disabled-mode');
+    toggleLabel.textContent = "Off";
+    drawer?.classList.remove('open');
+    overlay?.classList.remove('visible');
+  }
+
+  // Toggle switch change listener
+  toggleInput?.addEventListener('change', (e) => {
+    const isEnabled = e.target.checked;
+    localStorage.setItem('lri_mod_active', isEnabled);
+
+    if (isEnabled) {
+      drawer?.classList.remove('disabled-mode');
+      toggleLabel.textContent = "Active";
+      drawer?.classList.add('open');
+      overlay?.classList.add('visible');
     } else {
-        drawer?.classList.add('disabled-mode');
-        toggleLabel.textContent = "Off";
-        drawer?.classList.remove('open');
-        overlay?.classList.remove('visible');
+      drawer?.classList.add('disabled-mode');
+      toggleLabel.textContent = "Off";
+      drawer?.classList.remove('open');
+      overlay?.classList.remove('visible');
     }
+  });
 
-    // Toggle switch change listener
-    toggleInput?.addEventListener('change', (e) => {
-        const isEnabled = e.target.checked;
-        localStorage.setItem('lri_mod_active', isEnabled);
+  // Smart FAB handler: If clicked while off, it turns it back on and opens!
+  function handleFabClick() {
+    if (!toggleInput.checked) {
+      toggleInput.checked = true;
+      localStorage.setItem('lri_mod_active', 'true');
+      drawer?.classList.remove('disabled-mode');
+      toggleLabel.textContent = "Active";
+    }
+    drawer?.classList.add('open');
+    overlay?.classList.add('visible');
+  }
 
-        if (isEnabled) {
-            drawer?.classList.remove('disabled-mode');
-            toggleLabel.textContent = "Active";
-            drawer?.classList.add('open');
-            overlay?.classList.add('visible');
-        } else {
-            drawer?.classList.add('disabled-mode');
-            toggleLabel.textContent = "Off";
-            drawer?.classList.remove('open');
-            overlay?.classList.remove('visible');
-        }
+  function closeDrawer() {
+    drawer?.classList.remove('open');
+    overlay?.classList.remove('visible');
+  }
+
+  fab?.addEventListener('click', handleFabClick);
+  overlay?.addEventListener('click', closeDrawer);
+  handle?.addEventListener('click', closeDrawer);
+
+  const tabs = shadow.querySelectorAll('.drawer-tab');
+  const panels = shadow.querySelectorAll('.drawer-panel');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-panel');
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      shadow.getElementById('panel-' + target)?.classList.add('active');
     });
+  });
 
-    // Smart FAB handler: If clicked while off, it turns it back on and opens!
-    function handleFabClick() {
-        if (!toggleInput.checked) {
-            toggleInput.checked = true;
-            localStorage.setItem('lri_mod_active', 'true');
-            drawer?.classList.remove('disabled-mode');
-            toggleLabel.textContent = "Active";
-        }
-        drawer?.classList.add('open');
-        overlay?.classList.add('visible');
-    }
-
-    function closeDrawer() {
-        drawer?.classList.remove('open');
-        overlay?.classList.remove('visible');
-    }
-
-    fab?.addEventListener('click', handleFabClick);
-    overlay?.addEventListener('click', closeDrawer);
-    handle?.addEventListener('click', closeDrawer);
-
-    const tabs = shadow.querySelectorAll('.drawer-tab');
-    const panels = shadow.querySelectorAll('.drawer-panel');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.getAttribute('data-panel');
-            tabs.forEach(t => t.classList.remove('active'));
-            panels.forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            shadow.getElementById('panel-' + target)?.classList.add('active');
-        });
+  const subTabs = shadow.querySelectorAll('.sanctum-sub-tab');
+  const subPanels = shadow.querySelectorAll('.sanctum-sub-panel');
+  subTabs.forEach(st => {
+    st.addEventListener('click', () => {
+      const target = st.getAttribute('data-sub');
+      subTabs.forEach(t => { t.style.background = '#f8fafc'; t.style.border = '1px solid #e2e8f0'; });
+      st.style.background = '#e2e8f0'; st.style.border = 'none';
+      subPanels.forEach(p => p.style.display = 'none');
+      shadow.getElementById('sub-' + target).style.display = 'block';
     });
+  });
 
-    const subTabs = shadow.querySelectorAll('.sanctum-sub-tab');
-    const subPanels = shadow.querySelectorAll('.sanctum-sub-panel');
-    subTabs.forEach(st => {
-        st.addEventListener('click', () => {
-            const target = st.getAttribute('data-sub');
-            subTabs.forEach(t => { t.style.background = '#f8fafc'; t.style.border = '1px solid #e2e8f0'; });
-            st.style.background = '#e2e8f0'; st.style.border = 'none';
-            subPanels.forEach(p => p.style.display = 'none');
-            shadow.getElementById('sub-' + target).style.display = 'block';
-        });
-    });
-
-    // Profile Frame & Traits Injector
-    function applyLRIModifications() {
-        const profileButton = document.querySelector('button[aria-label="Open Sim panel"]');
-        if (profileButton && !profileButton.dataset.lriFramed) {
-            profileButton.dataset.lriFramed = "true";
-            profileButton.style.border = "3px solid #d97706";
-            profileButton.style.boxShadow = "none";
-            profileButton.style.overflow = "hidden";
-        }
-
-        const traitParagraphs = document.querySelectorAll('p');
-        traitParagraphs.forEach(p => {
-            if (p.textContent.includes('Traits:') && !p.textContent.includes('LRI Initiate')) {
-                p.textContent = p.textContent.trim() + ' · LRI Initiate';
-            }
-        });
+  // Profile Frame & Traits Injector
+  function applyLRIModifications() {
+    const profileButton = document.querySelector('button[aria-label="Open Sim panel"]');
+    if (profileButton && !profileButton.dataset.lriFramed) {
+      profileButton.dataset.lriFramed = "true";
+      profileButton.style.border = "3px solid #d97706";
+      profileButton.style.boxShadow = "none";
+      profileButton.style.overflow = "hidden";
     }
 
-    applyLRIModifications();
-    const lriObserver = new MutationObserver(() => { applyLRIModifications(); });
-    lriObserver.observe(document.body, { childList: true, subtree: true });
+    const traitParagraphs = document.querySelectorAll('p');
+    traitParagraphs.forEach(p => {
+      if (p.textContent.includes('Traits:') && !p.textContent.includes('LRI Initiate')) {
+        p.textContent = p.textContent.trim() + ' · LRI Initiate';
+      }
+    });
+  }
 
-    console.info('[LRI Mod] Modular Political Syndicate Engine Active.');
+  applyLRIModifications();
+  const lriObserver = new MutationObserver(() => { applyLRIModifications(); });
+  lriObserver.observe(document.body, { childList: true, subtree: true });
+
+  console.info('[LRI Mod] Modular Political Syndicate Engine Active.');
 })();

@@ -23,7 +23,7 @@ export default function DownloadPage() {
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>📦 Official Extension Package (v1.0.0)</div>
                     <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '12px' }}>Includes built loader, manifest v3, and syndicate UI bundle.</div>
 
-                    <a href="/injector/loader.js" download style={{ display: 'block', width: '100%', padding: '10px', background: '#10b981', color: '#ffffff', textAlign: 'center', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+                    <a href="/lri-extension.zip" download style={{ display: 'block', width: '100%', padding: '10px', background: '#10b981', color: '#ffffff', textAlign: 'center', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
                         Download Extension Loader
                     </a>
                 </div>

@@ -11,8 +11,8 @@ export default function LandingPage() {
           <img src="/lri-logo.jpg" alt="LRI Logo" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #cbd5e1' }} />
           <span style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>Lagos Research Initiative</span>
         </div>
-        <Link href="#pricing" style={{ padding: '8px 16px', background: '#10b981', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', transition: 'background 0.2s' }}>
-          Join the Syndicate
+        <Link href="/download" style={{ padding: '8px 16px', background: '#10b981', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', transition: 'background 0.2s' }}>
+          Get the Extension
         </Link>
       </header>
 
@@ -27,8 +27,8 @@ export default function LandingPage() {
         <p style={{ fontSize: '16px', color: '#64748b', lineHeight: 1.6, maxWidth: '650px', margin: '0 auto 30px' }}>
           The official political operating system and research network for elite fellows inside Lagos Life. Control Active Policy Directives, race for Grand Director, and secure your political influence.
         </p>
-        <Link href="#pricing" style={{ display: 'inline-block', padding: '14px 28px', background: '#10b981', color: '#ffffff', borderRadius: '12px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}>
-          Secure Your Syndicate Fellowship
+        <Link href="/download" style={{ display: 'inline-block', padding: '14px 28px', background: '#10b981', color: '#ffffff', borderRadius: '12px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}>
+          Install Free LRI Extension
         </Link>
       </main>
 
@@ -59,18 +59,6 @@ export default function LandingPage() {
           </p>
         </div>
 
-      </section>
-
-      {/* Pricing / Checkout Card */}
-      <section id="pricing" style={{ width: '100%', maxWidth: '440px', background: '#ffffff', border: '2px solid #d97706', borderRadius: '20px', padding: '32px', textAlign: 'center', boxShadow: '0 10px 25px -5px rgba(217, 119, 6, 0.1)' }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', marginBottom: '8px' }}>Lifetime Access Pass</div>
-        <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>₦15,000 <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>/ one-time</span></div>
-        <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>Unlocks full extension package, gold profile frame, and voting rights.</p>
-
-        <Link href="/download" style={{ display: 'block', width: '100%', padding: '14px', background: '#10b981', color: '#ffffff', borderRadius: '12px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', transition: 'background 0.2s', textAlign: 'center' }}>
-          Proceed to Secure Checkout
-        </Link>
-        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '12px' }}>Instant activation upon successful verification.</div>
       </section>
 
       {/* Footer */}

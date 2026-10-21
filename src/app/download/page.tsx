@@ -21,7 +21,7 @@ export default function DownloadPage() {
                 {/* Desktop & Android Download Box */}
                 <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', marginBottom: '16px', textAlign: 'left' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>📦 Desktop / Android Package (v1.0.0)</div>
-                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '12px' }}>For Chrome, Kiwi, or Yandex Browser (Unpacked Zip).</div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '12px' }}>For Chrome, Edge, Brave, or Yandex Browser (Unpacked Zip).</div>
 
                     <a href="/lri-extension.zip" download style={{ display: 'block', width: '100%', padding: '10px', background: '#10b981', color: '#ffffff', textAlign: 'center', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
                         Download Extension (.zip)
@@ -39,10 +39,31 @@ export default function DownloadPage() {
                 </div>
 
                 {/* Installation Steps */}
-                <div style={{ textAlign: 'left', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '16px', marginBottom: '24px', fontSize: '12px', color: '#92400e', lineHeight: 1.5 }}>
-                    <div style={{ fontWeight: 700, marginBottom: '4px', color: '#b45309' }}>⚙️ Quick Setup Guide:</div>
-                    <strong>Desktop/Android:</strong> Unzip package, open <code style={{ background: '#fef3c7', padding: '2px 4px', borderRadius: '4px' }}>chrome://extensions/</code>, enable Developer Mode, and click <strong>Load Unpacked</strong>.<br /><br />
-                    <strong>iOS Safari:</strong> Download the userscript into your designated Userscripts Files folder with Safari extensions enabled.
+                <div style={{ textAlign: 'left', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '24px', fontSize: '12px', lineHeight: 1.55 }}>
+                    <div style={{ fontWeight: 700, marginBottom: '12px', color: '#0f172a', fontSize: '13px' }}>📋 Step-by-Step Installation:</div>
+
+                    {/* Desktop / Android Guide */}
+                    <div style={{ marginBottom: '14px' }}>
+                        <div style={{ fontWeight: 700, color: '#047857', marginBottom: '6px' }}>💻 Desktop (Chrome / Brave / Edge) & Android (Yandex):</div>
+                        <ol style={{ margin: 0, paddingLeft: '18px', color: '#334155' }}>
+                            <li>Download & extract the <code style={{ background: '#e2e8f0', padding: '1px 4px', borderRadius: '4px' }}>.zip</code> archive.</li>
+                            <li>Go to <code style={{ background: '#e2e8f0', padding: '1px 4px', borderRadius: '4px' }}>chrome://extensions</code> (or browser menu &rarr; Extensions).</li>
+                            <li>Toggle <strong>Developer mode</strong> (top right corner).</li>
+                            <li>Click <strong>Load unpacked</strong> and select the extracted folder.</li>
+                            <li>Open <a href="https://lagoslife.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontWeight: 600 }}>lagoslife.app</a> — the LRI button appears!</li>
+                        </ol>
+                    </div>
+
+                    {/* Safari Guide */}
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
+                        <div style={{ fontWeight: 700, color: '#4338ca', marginBottom: '6px' }}>🍏 Safari (iOS / iPadOS):</div>
+                        <ol style={{ margin: 0, paddingLeft: '18px', color: '#334155' }}>
+                            <li>Install the free <strong>Userscripts</strong> app from the App Store.</li>
+                            <li>Open <em>Settings &rarr; Safari &rarr; Extensions</em>, enable <strong>Userscripts</strong>, and grant <em>Allow on All Websites</em>.</li>
+                            <li>Tap <strong>Download iOS Userscript</strong> above and save it to the <em>Userscripts</em> folder in the Files app (or tap extension icon &rarr; <em>New / Install Script</em>).</li>
+                            <li>Open or refresh <a href="https://lagoslife.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#4f46e5', fontWeight: 600 }}>lagoslife.app</a>.</li>
+                        </ol>
+                    </div>
                 </div>
 
                 <Link href="/" style={{ display: 'inline-block', fontSize: '13px', color: '#64748b', textDecoration: 'none', fontWeight: 600 }}>

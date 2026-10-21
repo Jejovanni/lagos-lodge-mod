@@ -61,6 +61,75 @@ export default function LandingPage() {
 
       </section>
 
+      {/* How To Guide Section */}
+      <section style={{ width: '100%', maxWidth: '900px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '36px 32px', marginBottom: '60px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{ display: 'inline-block', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', padding: '3px 10px', borderRadius: '16px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            User Guide
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', margin: '0 0 6px 0' }}>
+            How to Use the LRI Mod
+          </h2>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+            Everything you need to know after installing the extension inside Lagos Life.
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+          
+          {/* Step 1 */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <span style={{ width: '26px', height: '26px', background: '#10b981', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>1</span>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Open the Dashboard</h4>
+            </div>
+            <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+              Launch <a href="https://lagoslife.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontWeight: 600 }}>lagoslife.app</a>. Click the circular <strong>LRI seal button</strong> floating in the bottom-right corner to slide up the dashboard.
+            </p>
+          </div>
+
+          {/* Step 2 */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <span style={{ width: '26px', height: '26px', background: '#d97706', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>2</span>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Follow Sanctum Directives</h4>
+            </div>
+            <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+              Under <strong>Inner Sanctum</strong>, review the reigning Grand Director&apos;s active weekly policy directive, syndicate roster, and collective political objectives.
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <span style={{ width: '26px', height: '26px', background: '#4f46e5', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>3</span>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Run for Grand Director</h4>
+            </div>
+            <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+              Switch to <strong>Elections</strong>. When the countdown ends, be among the first 5 candidates to apply with your manifesto and campaign across Lagos.
+            </p>
+          </div>
+
+          {/* Step 4 */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <span style={{ width: '26px', height: '26px', background: '#0284c7', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>4</span>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Vote in Sprint Ballots</h4>
+            </div>
+            <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+              During the 10-hour voting window, cast your vote for endorsed candidates. Live tallies determine who commands the syndicate for the following week.
+            </p>
+          </div>
+
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Link href="/download" style={{ display: 'inline-block', fontSize: '13px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>
+            Ready to deploy? Visit Download & Installation &rarr;
+          </Link>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer style={{ marginTop: '80px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
         &copy; 2026 Lagos Research Initiative. All rights reserved. Operating within Lagos Life.

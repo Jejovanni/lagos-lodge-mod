@@ -32,27 +32,61 @@ export function initSanctum(shadow, showLriModal) {
 
     async function fetchAndRenderFellowsRoster() {
         const container = shadow.getElementById('fellows-roster-container');
+        const badge = shadow.getElementById('fellows-count-badge');
         if (!container) return;
         try {
             const config = getSupabaseConfig();
-            const res = await fetch(`${config.url}/rest/v1/lri_members?select=in_game_handle`, {
+            const res = await fetch(`${config.url}/rest/v1/lri_members?select=in_game_handle&order=created_at.desc`, {
                 headers: { 'apikey': config.key, 'Authorization': `Bearer ${config.key}` }
             });
             const members = await res.json();
+            const count = Array.isArray(members) ? members.length : 0;
+            if (badge) badge.textContent = `${count} Fellow${count === 1 ? '' : 's'}`;
+
             if (!members || members.length === 0) {
-                container.innerHTML = `<div style="color: #64748b; font-style: italic;">No active fellows registered.</div>`;
+                container.innerHTML = `<div style="color: #64748b; font-style: italic; text-align: center; padding: 8px;">No active fellows registered yet.</div>`;
                 return;
             }
             container.innerHTML = members.map(m => `
         <div style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
           <strong>${m.in_game_handle}</strong>
-          <span style="font-size: 10px; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 600;">LRI Initiate</span>
+          <span style="font-size: 10px; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 600;">LRI Fellow</span>
         </div>
       `).join('');
         } catch (err) {
-            container.innerHTML = `<div style="color: #ef4444;">Failed to load roster.</div>`;
+            container.innerHTML = `<div style="color: #ef4444; text-align: center; padding: 8px;">Failed to load roster.</div>`;
         }
     }
+
+    shadow.getElementById('btn-join-roster')?.addEventListener('click', async () => {
+        const input = shadow.getElementById('fellow-handle-input');
+        const handle = input?.value?.trim();
+        if (!handle) return showLriModal('Username Required', 'Please enter your Lagos Life username to join the roster.', '⚠️');
+
+        try {
+            const config = getSupabaseConfig();
+            const res = await fetch(`${config.url}/rest/v1/lri_members`, {
+                method: 'POST',
+                headers: {
+                    'apikey': config.key,
+                    'Authorization': `Bearer ${config.key}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ in_game_handle: handle })
+            });
+
+            if (res.ok) {
+                showLriModal('Welcome Fellow', `Welcome to the syndicate roster, ${handle}!`, '🏛️');
+                if (input) input.value = '';
+                fetchAndRenderFellowsRoster();
+            } else {
+                showLriModal('Already Enrolled', 'You are already registered on the syndicate roster.', 'ℹ️');
+            }
+        } catch (e) {
+            showLriModal('Error', 'Network error joining roster.', '❌');
+        }
+    });
 
     fetchDirectives();
     fetchAndRenderFellowsRoster();

@@ -2,12 +2,12 @@ function e(e){return function(t,n,r=`🏛️`){let i=e.getElementById(`lri-modal
         <div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
           • ${e.directive_text} <span style="font-size: 11px; color: #94a3b8; display: block; margin-top: 2px;">Issued by ${e.author_handle}</span>
         </div>
-      `).join(``)}catch{n.innerHTML=`<div style="color: #ef4444;">Failed to load directives.</div>`}}async function a(){let n=e.getElementById(`fellows-roster-container`);if(n)try{let e=t(),r=await(await fetch(`${e.url}/rest/v1/lri_members?select=in_game_handle`,{headers:{apikey:e.key,Authorization:`Bearer ${e.key}`}})).json();if(!r||r.length===0){n.innerHTML=`<div style="color: #64748b; font-style: italic;">No active fellows registered.</div>`;return}n.innerHTML=r.map(e=>`
+      `).join(``)}catch{n.innerHTML=`<div style="color: #ef4444;">Failed to load directives.</div>`}}async function a(){let n=e.getElementById(`fellows-roster-container`),r=e.getElementById(`fellows-count-badge`);if(n)try{let e=t(),i=await(await fetch(`${e.url}/rest/v1/lri_members?select=in_game_handle&order=created_at.desc`,{headers:{apikey:e.key,Authorization:`Bearer ${e.key}`}})).json(),a=Array.isArray(i)?i.length:0;if(r&&(r.textContent=`${a} Fellow${a===1?``:`s`}`),!i||i.length===0){n.innerHTML=`<div style="color: #64748b; font-style: italic; text-align: center; padding: 8px;">No active fellows registered yet.</div>`;return}n.innerHTML=i.map(e=>`
         <div style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
           <strong>${e.in_game_handle}</strong>
-          <span style="font-size: 10px; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 600;">LRI Initiate</span>
+          <span style="font-size: 10px; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 600;">LRI Fellow</span>
         </div>
-      `).join(``)}catch{n.innerHTML=`<div style="color: #ef4444;">Failed to load roster.</div>`}}i(),a(),e.getElementById(`btn-publish-directive`)?.addEventListener(`click`,async()=>{let a=e.getElementById(`new-directive-input`),o=a?.value.trim();if(!o)return n(`Empty Field`,`Directive text cannot be empty.`,`⚠️`);try{let e=t();if(!(await fetch(`${e.url}/rest/v1/lri_directives`,{method:`POST`,headers:{apikey:e.key,Authorization:`Bearer ${e.key}`,"Content-Type":`application/json`,Prefer:`return=minimal`},body:JSON.stringify({directive_text:o,author_handle:r})})).ok)throw Error();n(`Directive Broadcasted`,`New policy directive broadcasted successfully across the LRI network!`,`👑`),a.value=``,i()}catch{n(`Error`,`Error broadcasting directive.`,`❌`)}})}function r(e,n){async function r(){let r=e.getElementById(`shortlisted-candidates-list`);if(r)try{let i=t(),a=await(await fetch(`${i.url}/rest/v1/lri_elections?is_shortlisted=eq.true&select=*`,{headers:{apikey:i.key,Authorization:`Bearer ${i.key}`}})).json();if(!a||a.length===0){r.innerHTML=`<div style="color: #64748b; font-style: italic;">No candidates shortlisted yet. Race opens weekly.</div>`;return}r.innerHTML=a.map(e=>`
+      `).join(``)}catch{n.innerHTML=`<div style="color: #ef4444; text-align: center; padding: 8px;">Failed to load roster.</div>`}}e.getElementById(`btn-join-roster`)?.addEventListener(`click`,async()=>{let r=e.getElementById(`fellow-handle-input`),i=r?.value?.trim();if(!i)return n(`Username Required`,`Please enter your Lagos Life username to join the roster.`,`⚠️`);try{let e=t();(await fetch(`${e.url}/rest/v1/lri_members`,{method:`POST`,headers:{apikey:e.key,Authorization:`Bearer ${e.key}`,"Content-Type":`application/json`,Prefer:`return=minimal`},body:JSON.stringify({in_game_handle:i})})).ok?(n(`Welcome Fellow`,`Welcome to the syndicate roster, ${i}!`,`🏛️`),r&&(r.value=``),a()):n(`Already Enrolled`,`You are already registered on the syndicate roster.`,`ℹ️`)}catch{n(`Error`,`Network error joining roster.`,`❌`)}}),i(),a(),e.getElementById(`btn-publish-directive`)?.addEventListener(`click`,async()=>{let a=e.getElementById(`new-directive-input`),o=a?.value.trim();if(!o)return n(`Empty Field`,`Directive text cannot be empty.`,`⚠️`);try{let e=t();if(!(await fetch(`${e.url}/rest/v1/lri_directives`,{method:`POST`,headers:{apikey:e.key,Authorization:`Bearer ${e.key}`,"Content-Type":`application/json`,Prefer:`return=minimal`},body:JSON.stringify({directive_text:o,author_handle:r})})).ok)throw Error();n(`Directive Broadcasted`,`New policy directive broadcasted successfully across the LRI network!`,`👑`),a.value=``,i()}catch{n(`Error`,`Error broadcasting directive.`,`❌`)}})}function r(e,n){async function r(){let r=e.getElementById(`shortlisted-candidates-list`);if(r)try{let i=t(),a=await(await fetch(`${i.url}/rest/v1/lri_elections?is_shortlisted=eq.true&select=*`,{headers:{apikey:i.key,Authorization:`Bearer ${i.key}`}})).json();if(!a||a.length===0){r.innerHTML=`<div style="color: #64748b; font-style: italic;">No candidates shortlisted yet. Race opens weekly.</div>`;return}r.innerHTML=a.map(e=>`
         <div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <strong>${e.candidate_handle}</strong>
@@ -173,8 +173,17 @@ function e(e){return function(t,n,r=`🏛️`){let i=e.getElementById(`lri-modal
 
         <div class="sanctum-sub-panel" id="sub-fellows" style="display: none;">
           <div class="lri-card">
-            <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">👥 Syndicate Fellows Roster</div>
-            <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Active members operating within the LRI network.</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <div style="font-size: 14px; font-weight: 600; color: #0f172a;">👥 Syndicate Fellows Roster</div>
+              <span id="fellows-count-badge" style="font-size: 11px; background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 12px; font-weight: 700;">0 Fellows</span>
+            </div>
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Active members operating within the LRI network.</div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+              <input type="text" id="fellow-handle-input" placeholder="Input Lagos Life username..." style="flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;" />
+              <button class="btn-primary" id="btn-join-roster" style="padding: 8px 12px; font-size: 12px; white-space: nowrap;">Join Roster</button>
+            </div>
+
             <div id="fellows-roster-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; max-height: 250px; overflow-y: auto;">
               Loading fellows list...
             </div>

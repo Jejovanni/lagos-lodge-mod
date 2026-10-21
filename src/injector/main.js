@@ -174,8 +174,17 @@ import { initLobby } from './modules/lobby.js';
 
         <div class="sanctum-sub-panel" id="sub-fellows" style="display: none;">
           <div class="lri-card">
-            <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">👥 Syndicate Fellows Roster</div>
-            <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Active members operating within the LRI network.</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <div style="font-size: 14px; font-weight: 600; color: #0f172a;">👥 Syndicate Fellows Roster</div>
+              <span id="fellows-count-badge" style="font-size: 11px; background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 12px; font-weight: 700;">0 Fellows</span>
+            </div>
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Active members operating within the LRI network.</div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+              <input type="text" id="fellow-handle-input" placeholder="Input Lagos Life username..." style="flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;" />
+              <button class="btn-primary" id="btn-join-roster" style="padding: 8px 12px; font-size: 12px; white-space: nowrap;">Join Roster</button>
+            </div>
+
             <div id="fellows-roster-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; max-height: 250px; overflow-y: auto;">
               Loading fellows list...
             </div>

@@ -100,7 +100,7 @@ import { initLobby } from './modules/lobby.js';
 
   const logoUrl = typeof chrome !== 'undefined' && chrome.runtime?.getURL
     ? chrome.runtime.getURL('lri-logo.jpg')
-    : '/lri-logo.jpg';
+    : 'https://lagos-lodge-mod.netlify.app/lri-logo.jpg';
 
   shadow.innerHTML = `
     <style>${style.textContent}</style>

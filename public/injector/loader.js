@@ -101,7 +101,7 @@ function e(e){return function(t,n,r=`🏛️`){let i=e.getElementById(`lri-modal
 
     #lri-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); display: none; z-index: 2147483646; }
     #lri-overlay.visible { display: block; }
-  `;let s=typeof chrome<`u`&&chrome.runtime?.getURL?chrome.runtime.getURL(`lri-logo.jpg`):`/lri-logo.jpg`;a.innerHTML=`
+  `;let s=typeof chrome<`u`&&chrome.runtime?.getURL?chrome.runtime.getURL(`lri-logo.jpg`):`https://lagos-lodge-mod.netlify.app/lri-logo.jpg`;a.innerHTML=`
     <style>${o.textContent}</style>
     <div id="lri-overlay"></div>
 

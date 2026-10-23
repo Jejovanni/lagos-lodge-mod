@@ -1,20 +1,16 @@
 // src/app/api/admin/petitions/[id]/route.ts
 // PATCH /api/admin/petitions/[id]
-// Grand Masters review and update the status of a petition.
-// On acceptance: provisions a license key and emails the applicant.
+// Grand Masters review and update the status of candidate petitions/manifestos.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { provisionLicenseKey } from '@/lib/license';
-import { sendEmail, licenseDeliveryEmail } from '@/lib/email';
 import type { ApplicationStatus, LicenseTier } from '@/types/mod';
 import type { ApiError } from '@/types/mod';
-import { randomBytes } from 'crypto';
 
 interface ReviewBody {
   status: ApplicationStatus;
   reviewer_notes?: string;
-  license_tier?: LicenseTier; // required when status === 'accepted'
+  license_tier?: LicenseTier;
 }
 
 const VALID_REVIEW_STATUSES: ApplicationStatus[] = [
@@ -48,9 +44,6 @@ export async function PATCH(
       422,
     );
   }
-  if (status === 'accepted' && !license_tier) {
-    return errorResponse('license_tier is required when accepting a petition', 422);
-  }
 
   // ── Fetch the petition ─────────────────────────────────────────────────
   const { data: petition, error: fetchError } = await supabaseAdmin
@@ -62,11 +55,6 @@ export async function PATCH(
   if (fetchError) return errorResponse('Internal server error', 500);
   if (!petition)  return errorResponse('Petition not found', 404);
 
-  // Prevent re-processing an already accepted petition
-  if (petition.status === 'accepted') {
-    return errorResponse('Petition already accepted — license already issued', 409);
-  }
-
   // ── Update petition status ─────────────────────────────────────────────
   const updates: Record<string, unknown> = {
     status,
@@ -74,19 +62,6 @@ export async function PATCH(
     reviewer_notes: reviewer_notes ?? null,
     reviewed_at: new Date().toISOString(),
   };
-
-  let rawLicenseKey: string | null = null;
-
-  // ── If accepted: provision a complimentary license ─────────────────────
-  if (status === 'accepted' && license_tier) {
-    const freeRef = `ADMIN-GRANT-${randomBytes(8).toString('hex').toUpperCase()}`;
-    const { rawKey, licenseId } = await provisionLicenseKey({
-      tier: license_tier,
-      paystackReference: freeRef,
-    });
-    rawLicenseKey = rawKey;
-    updates['license_id'] = licenseId;
-  }
 
   const { error: updateError } = await supabaseAdmin
     .from('petition_applications')
@@ -96,19 +71,6 @@ export async function PATCH(
   if (updateError) {
     console.error('[admin/petitions/[id]] Update error:', updateError.message);
     return errorResponse('Failed to update petition', 500);
-  }
-
-  // ── Email the applicant ────────────────────────────────────────────────
-  if (status === 'accepted' && rawLicenseKey && license_tier) {
-    await sendEmail({
-      to: petition.email,
-      subject: '⬡ Your Secret Lodge License Key',
-      html: licenseDeliveryEmail({
-        displayName: petition.applicant_name,
-        licenseKey: rawLicenseKey,
-        tier: license_tier,
-      }),
-    });
   }
 
   // ── Audit log ──────────────────────────────────────────────────────────
@@ -140,19 +102,22 @@ async function requireAdminSession(req: NextRequest): Promise<string | null> {
     .eq('session_token', sessionToken)
     .maybeSingle();
 
-  if (!session || session.revoked_at || new Date(session.expires_at) < new Date()) return null;
-  if (!session.member_id) return null;
+  if (!session || session.revoked_at || new Date(session.expires_at) < new Date()) {
+    return null;
+  }
 
+  // Verify the member holds grand_master rank
   const { data: member } = await supabaseAdmin
     .from('members')
-    .select('rank, is_active')
+    .select('id, rank')
     .eq('id', session.member_id)
     .maybeSingle();
 
-  if (!member?.is_active) return null;
-  if (!['master', 'grand_master'].includes(member.rank)) return null;
+  if (!member || member.rank !== 'grand_master') {
+    return null;
+  }
 
-  return session.member_id as string;
+  return member.id;
 }
 
 function errorResponse(error: string, status: number): NextResponse<ApiError> {

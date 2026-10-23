@@ -11,9 +11,14 @@ export default function LandingPage() {
           <img src="/lri-logo.jpg" alt="LRI Logo" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #cbd5e1' }} />
           <span style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>Lagos Research Initiative</span>
         </div>
-        <Link href="/download" style={{ padding: '8px 16px', background: '#10b981', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', transition: 'background 0.2s' }}>
-          Get the Extension
-        </Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Link href="/sanctum" style={{ padding: '8px 16px', background: '#10b981', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+            Open Web App
+          </Link>
+          <Link href="/dashboard" style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+            Admin Portal
+          </Link>
+        </div>
       </header>
 
       {/* Hero Section */}
@@ -25,11 +30,16 @@ export default function LandingPage() {
           Shape Policy. Command Power. <br /><span style={{ color: '#d97706' }}>Rule Lagos Life.</span>
         </h1>
         <p style={{ fontSize: '16px', color: '#64748b', lineHeight: 1.6, maxWidth: '650px', margin: '0 auto 30px' }}>
-          The official political operating system and research network for elite fellows inside Lagos Life. Control Active Policy Directives, race for Grand Director, and secure your political influence.
+          The official web platform and research network for elite fellows inside Lagos Life. Instant access with your in-game username — no payments or downloads required.
         </p>
-        <Link href="/download" style={{ display: 'inline-block', padding: '14px 28px', background: '#10b981', color: '#ffffff', borderRadius: '12px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}>
-          Install Free LRI Extension
-        </Link>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+          <Link href="/sanctum" style={{ display: 'inline-block', padding: '14px 28px', background: '#10b981', color: '#ffffff', borderRadius: '12px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}>
+            Launch Web App &rarr;
+          </Link>
+          <Link href="/dashboard" style={{ display: 'inline-block', padding: '14px 28px', background: '#0f172a', color: '#ffffff', borderRadius: '12px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+            Grand Director Portal
+          </Link>
+        </div>
       </main>
 
       {/* Features Grid */}
@@ -68,10 +78,10 @@ export default function LandingPage() {
             User Guide
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', margin: '0 0 6px 0' }}>
-            How to Use the LRI Mod
+            How the Syndicate Operates
           </h2>
           <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
-            Everything you need to know after installing the extension inside Lagos Life.
+            Everything you need to know to participate as an active fellow in Lagos Life.
           </p>
         </div>
 
@@ -81,10 +91,10 @@ export default function LandingPage() {
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <span style={{ width: '26px', height: '26px', background: '#10b981', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>1</span>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Open the Dashboard</h4>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Register with Username</h4>
             </div>
             <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
-              Launch <a href="https://lagoslife.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontWeight: 600 }}>lagoslife.app</a>. Click the circular <strong>LRI seal button</strong> floating in the bottom-right corner to slide up the dashboard.
+              Enter your Lagos Life in-game username to instantly gain access to your syndicate dashboard without fees.
             </p>
           </div>
 
@@ -92,10 +102,10 @@ export default function LandingPage() {
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <span style={{ width: '26px', height: '26px', background: '#d97706', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>2</span>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Follow Sanctum Directives</h4>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Follow Directives</h4>
             </div>
             <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
-              Under <strong>Inner Sanctum</strong>, review the reigning Grand Director&apos;s active weekly policy directive, syndicate roster, and collective political objectives.
+              Review the reigning Grand Director&apos;s active weekly policy directive, syndicate roster, and collective political objectives.
             </p>
           </div>
 
@@ -106,7 +116,7 @@ export default function LandingPage() {
               <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Run for Grand Director</h4>
             </div>
             <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
-              Switch to <strong>Elections</strong>. When the countdown ends, be among the first 5 candidates to apply with your manifesto and campaign across Lagos.
+              When election cycles open, submit your candidacy and platform to campaign across the Lagos Life network.
             </p>
           </div>
 
@@ -114,18 +124,18 @@ export default function LandingPage() {
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <span style={{ width: '26px', height: '26px', background: '#0284c7', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>4</span>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Vote in Sprint Ballots</h4>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Sprint Ballots</h4>
             </div>
             <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
-              During the 10-hour voting window, cast your vote for endorsed candidates. Live tallies determine who commands the syndicate for the following week.
+              Cast your vote during the voting window. Live tallies determine who commands the syndicate for the following week.
             </p>
           </div>
 
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <Link href="/download" style={{ display: 'inline-block', fontSize: '13px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>
-            Ready to deploy? Visit Download & Installation &rarr;
+          <Link href="/sanctum" style={{ display: 'inline-block', fontSize: '13px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>
+            Open Syndicate Web App &rarr;
           </Link>
         </div>
       </section>

@@ -35,7 +35,6 @@ interface LobbyPetition {
 export default function SanctumPage() {
   const [activeTab, setActiveTab] = useState<'sanctum' | 'elections' | 'lobby'>('sanctum');
   const [sanctumSubTab, setSanctumSubTab] = useState<'board' | 'fellows'>('board');
-  const [isLriActive, setIsLriActive] = useState(true);
 
   // User state
   const [usernameInput, setUsernameInput] = useState('');
@@ -122,7 +121,7 @@ export default function SanctumPage() {
     }
   }
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     if (!usernameInput.trim()) return;
     const handle = usernameInput.trim();
@@ -130,9 +129,22 @@ export default function SanctumPage() {
     setUserHandle(handle);
     setCandidateHandle(handle);
     setLobbyHandle(handle);
+
+    // Register fellow into database so they appear in active fellows roster
+    try {
+      await fetch('/api/member/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: handle }),
+      });
+      loadFellows();
+    } catch (err) {
+      console.warn('Registration sync error:', err);
+    }
+
     setModal({
       title: 'Welcome Initiate',
-      message: `You have successfully entered as ${handle}.`,
+      message: `You have successfully entered as ${handle}. You are now recorded on the active Fellows Roster.`,
       icon: '👑',
     });
   }
@@ -291,38 +303,6 @@ export default function SanctumPage() {
               &larr; Home
             </Link>
           )}
-
-          {/* Toggle Switch */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
-              {isLriActive ? 'Active' : 'Off'}
-            </span>
-            <button
-              onClick={() => setIsLriActive(!isLriActive)}
-              style={{
-                width: '42px',
-                height: '24px',
-                borderRadius: '12px',
-                background: isLriActive ? '#10b981' : '#cbd5e1',
-                border: 'none',
-                cursor: 'pointer',
-                position: 'relative',
-                transition: 'background 0.2s',
-                padding: '2px',
-              }}
-            >
-              <div
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: '#ffffff',
-                  transform: isLriActive ? 'translateX(18px)' : 'translateX(0)',
-                  transition: 'transform 0.2s',
-                }}
-              />
-            </button>
-          </div>
         </div>
       </header>
 
@@ -527,22 +507,52 @@ export default function SanctumPage() {
               {/* Sub-Panel: Fellows Roster */}
               {sanctumSubTab === 'fellows' && (
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
-                    👥 Syndicate Fellows Roster
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                      👥 Syndicate Active Fellows Roster
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#059669', background: '#ecfdf5', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                      {fellows.length} Active Fellows
+                    </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
-                    Active members operating within the LRI network.
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
+                    Live roster of every fellow registered across Lagos Life.
                   </div>
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px', maxHeight: '350px', overflowY: 'auto' }}>
+
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', maxHeight: '380px', overflowY: 'auto' }}>
                     {fellows.length === 0 ? (
-                      <div style={{ color: '#64748b', fontStyle: 'italic', padding: '10px' }}>No active fellows registered.</div>
+                      <div style={{ color: '#64748b', fontStyle: 'italic', padding: '20px', textAlign: 'center', fontSize: '13px' }}>
+                        No active fellows registered yet. Register using your Lagos Life handle above to join the roster!
+                      </div>
                     ) : (
                       fellows.map((m, idx) => (
-                        <div key={idx} style={{ padding: '10px 12px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
-                          <strong>{m.in_game_handle}</strong>
-                          <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
-                            {m.research_rank || 'LRI Initiate'}
-                          </span>
+                        <div
+                          key={idx}
+                          style={{
+                            padding: '12px 16px',
+                            borderBottom: idx === fellows.length - 1 ? 'none' : '1px solid #f1f5f9',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            fontSize: '13px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>
+                              {idx + 1}
+                            </div>
+                            <div>
+                              <strong style={{ color: '#0f172a' }}>{m.in_game_handle}</strong>
+                              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                Contribution: {m.contribution_points ?? 10} pts
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                              {m.research_rank || 'LRI Initiate'}
+                            </span>
+                          </div>
                         </div>
                       ))
                     )}
@@ -555,67 +565,128 @@ export default function SanctumPage() {
           {/* TAB 2: WEEKLY ELECTIONS */}
           {activeTab === 'elections' && (
             <div>
-              {/* Election Timer Card */}
+              {/* Election Overview Header */}
               <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#b45309', marginBottom: '4px' }}>
-                  ⏱️ Grand Director Election Timer
-                </div>
-                <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '8px' }}>
-                  Next application window opens in:
-                </div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: '#78350f', fontFamily: 'monospace' }}>
-                  06D : 14H : 32M
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#b45309', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Syndicate Governance
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#78350f', margin: '2px 0 4px 0' }}>
+                      👑 Weekly Grand Director Election
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#92400e', lineHeight: 1.4 }}>
+                      Every week, syndicate fellows elect a Grand Director to command executive directives and set Lagos Life policy.
+                    </div>
+                  </div>
+                  <div style={{ background: '#ffffff', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 14px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '10px', color: '#b45309', fontWeight: 700 }}>APPLICATION WINDOW</div>
+                    <div style={{ fontSize: '18px', fontWeight: 800, color: '#78350f', fontFamily: 'monospace' }}>
+                      06D : 14H : 32M
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Candidate Application Race (First 5 Slots) */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
-                  🏃‍♂️ Candidate Application Race (First 5 Slots)
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                    🏃‍♂️ Candidate Application Race (First 5 Slots)
+                  </div>
+                  <span style={{ fontSize: '11px', background: candidates.length >= 5 ? '#fef2f2' : '#ecfdf5', color: candidates.length >= 5 ? '#b91c1c' : '#047857', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                    {candidates.length} / 5 Slots Claimed
+                  </span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '10px' }}>
-                  When countdown hits zero, the first 5 members to register lock in their ballot placement.
+                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
+                  Lock in one of the coveted 5 ballot placements before the weekly sprint begins.
                 </div>
-                <form onSubmit={handleApplyCandidate}>
+                <form onSubmit={handleApplyCandidate} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <input
                     type="text"
-                    placeholder="Your In-Game Handle"
+                    placeholder="Candidate In-Game Handle"
                     value={candidateHandle}
                     onChange={(e) => setCandidateHandle(e.target.value)}
-                    style={{ padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px', width: '100%', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' }}
+                    disabled={candidates.length >= 5}
+                    style={{ flex: '1 1 200px', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                   <button
                     type="submit"
-                    disabled={loading}
-                    style={{ width: '100%', padding: '10px', fontSize: '13px', fontWeight: 600, background: '#d97706', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                    disabled={loading || candidates.length >= 5}
+                    style={{
+                      padding: '10px 20px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      background: candidates.length >= 5 ? '#94a3b8' : '#d97706',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: candidates.length >= 5 ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
                   >
-                    Lock In Candidacy Slot
+                    {candidates.length >= 5 ? 'Slots Filled' : 'Lock In Candidacy Slot'}
                   </button>
                 </form>
               </div>
 
-              {/* Active 10-Hour Voting Sprint */}
+              {/* Active Voting Sprint */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
-                  🗳️ Active 10-Hour Voting Sprint
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                    🗳️ Active 10-Hour Voting Sprint
+                  </div>
+                  <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#047857', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                    Live Ballot Ledger
+                  </span>
                 </div>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', fontSize: '13px' }}>
+                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
+                  Cast your vote for the next Grand Director. Votes are recorded instantly.
+                </div>
+
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '6px 12px', fontSize: '13px' }}>
                   {candidates.length === 0 ? (
-                    <div style={{ color: '#64748b', fontStyle: 'italic' }}>
-                      Waiting for election sprint to open...
+                    <div style={{ color: '#64748b', fontStyle: 'italic', padding: '20px', textAlign: 'center' }}>
+                      No candidates currently shortlisted. Submit your handle above to enter the ballot!
                     </div>
                   ) : (
-                    candidates.map((c) => (
-                      <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <strong>{c.candidate_handle}</strong>
-                          <div style={{ fontSize: '11px', color: '#64748b' }}>Votes: {c.votes || 0}</div>
+                    candidates.map((c, idx) => (
+                      <div
+                        key={c.id}
+                        style={{
+                          padding: '12px 6px',
+                          borderBottom: idx === candidates.length - 1 ? 'none' : '1px solid #f1f5f9',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '16px' }}>{idx === 0 ? '👑' : '🎖️'}</span>
+                          <div>
+                            <strong style={{ color: '#0f172a', fontSize: '14px' }}>{c.candidate_handle}</strong>
+                            <div style={{ fontSize: '12px', color: '#64748b' }}>
+                              Votes: <strong style={{ color: '#0f172a' }}>{c.votes || 0}</strong>
+                            </div>
+                          </div>
                         </div>
                         <button
                           onClick={() => handleVote(c.id)}
-                          style={{ padding: '6px 14px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                          style={{
+                            padding: '8px 16px',
+                            background: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
                         >
-                          Vote
+                          <span>Vote</span>
                         </button>
                       </div>
                     ))
@@ -628,41 +699,26 @@ export default function SanctumPage() {
           {/* TAB 3: CANDIDATE LOBBY */}
           {activeTab === 'lobby' && (
             <div>
-              {/* Public Manifesto Board */}
+              {/* Lobby Header Card */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
-                  📜 Public Manifesto Board
+                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Campaign Headquarters
                 </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
-                  Review platforms submitted by candidates seeking official LRI endorsement.
+                <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '2px 0 4px 0' }}>
+                  🏛️ Candidate Lobby & Proposal Forum
                 </div>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', maxHeight: '240px', overflowY: 'auto' }}>
-                  {petitions.length === 0 ? (
-                    <div style={{ color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
-                      No candidate platforms submitted yet.
-                    </div>
-                  ) : (
-                    petitions.map((p) => (
-                      <div key={p.id} style={{ padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <strong style={{ color: '#0f172a', fontSize: '13px' }}>🏛️ {p.candidate_handle}</strong>
-                          <span style={{ fontSize: '10px', background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                            Pending Review
-                          </span>
-                        </div>
-                        <p style={{ color: '#475569', fontSize: '12px', lineHeight: 1.4, margin: 0, whiteSpace: 'pre-wrap' }}>
-                          {p.platform_text}
-                        </p>
-                      </div>
-                    ))
-                  )}
+                <div style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
+                  Candidates running from across Lagos Life submit their policy proposals and manifestos here to campaign and earn the syndicate&apos;s backing.
                 </div>
               </div>
 
               {/* Submit Platform Form */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
-                  🤝 Submit Your Political Platform
+              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>
+                  ✍️ Submit Your Proposal for Running for Office
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
+                  Declare your platform, planned tax rates, public safety protocols, or commerce initiatives.
                 </div>
                 <form onSubmit={handleSubmitLobby}>
                   <input
@@ -670,22 +726,64 @@ export default function SanctumPage() {
                     placeholder="Candidate In-Game Handle"
                     value={lobbyHandle}
                     onChange={(e) => setLobbyHandle(e.target.value)}
-                    style={{ padding: '10px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '8px', width: '100%', fontSize: '13px', boxSizing: 'border-box' }}
+                    style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '10px', width: '100%', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                   <textarea
-                    placeholder="Outline your political platform..."
+                    placeholder="Outline your policy platform and campaign proposal for running for office..."
                     value={lobbyPlatform}
                     onChange={(e) => setLobbyPlatform(e.target.value)}
-                    style={{ padding: '10px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px', width: '100%', height: '80px', fontSize: '13px', boxSizing: 'border-box' }}
+                    style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px', width: '100%', height: '90px', fontSize: '13px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                   />
                   <button
                     type="submit"
                     disabled={loading}
                     style={{ width: '100%', padding: '12px', background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                   >
-                    {loading ? 'Submitting...' : 'Submit Platform for Review'}
+                    {loading ? 'Submitting Proposal...' : 'Publish Proposal to Candidate Lobby'}
                   </button>
                 </form>
+              </div>
+
+              {/* Public Manifesto Board */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                    📜 Published Candidate Manifestos & Proposals
+                  </div>
+                  <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#047857', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                    {petitions.length} Proposals Submitted
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
+                  Review all platforms submitted by Lagos Life candidates seeking official LRI endorsement.
+                </div>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', maxHeight: '300px', overflowY: 'auto' }}>
+                  {petitions.length === 0 ? (
+                    <div style={{ color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '20px', fontSize: '13px' }}>
+                      No candidate proposals submitted yet. Be the first candidate to publish your manifesto above!
+                    </div>
+                  ) : (
+                    petitions.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        style={{
+                          padding: '12px 6px',
+                          borderBottom: idx === petitions.length - 1 ? 'none' : '1px solid #f1f5f9'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <strong style={{ color: '#0f172a', fontSize: '14px' }}>🏛️ {p.candidate_handle}</strong>
+                          <span style={{ fontSize: '10px', background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                            Candidate Platform
+                          </span>
+                        </div>
+                        <p style={{ color: '#475569', fontSize: '13px', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
+                          {p.platform_text}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}

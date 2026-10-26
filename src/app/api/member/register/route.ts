@@ -104,6 +104,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
 
       member = createdMember;
+
+      // Keep lri_members in sync for the Fellows Roster
+      try {
+        await supabaseAdmin
+          .from('lri_members')
+          .upsert({
+            in_game_handle: username,
+            research_rank: 'LRI Initiate',
+            contribution_points: 10,
+            is_active: true,
+          }, { onConflict: 'in_game_handle' });
+      } catch (lriErr) {
+        console.warn('[member/register] lri_members sync notice:', lriErr);
+      }
     }
 
     if (!member.is_active) {

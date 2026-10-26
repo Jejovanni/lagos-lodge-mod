@@ -33,10 +33,10 @@ export function middleware(req: NextRequest): NextResponse {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://js.paystack.co",
+      `script-src 'self' 'unsafe-inline'${IS_PROD ? '' : " 'unsafe-eval'"} https://js.paystack.co`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
-      "connect-src 'self' https://api.paystack.co https://*.supabase.co",
+      "connect-src 'self' https://api.paystack.co https://*.supabase.co" + (IS_PROD ? '' : ' ws://localhost:* http://localhost:*'),
       "frame-src https://checkout.paystack.com",
       "object-src 'none'",
       "base-uri 'self'",
